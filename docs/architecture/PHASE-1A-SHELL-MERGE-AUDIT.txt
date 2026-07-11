@@ -1,0 +1,139 @@
+﻿PHASE 1A — ACTIVE SHELL MERGE AUDIT
+Generated: 2026-07-12 03:34:23
+Stage: C:\Users\Aftab khan\BRICKS-MAKER-ADVERTISEMENT-STUDIO\migration-staging\phase-1a-frontend-shell
+Active web: C:\Users\Aftab khan\BRICKS-MAKER-ADVERTISEMENT-STUDIO\apps\web
+
+READ-ONLY COMPARISON — NO FILES MODIFIED
+
+============================================================
+FILE: src\main.tsx
+============================================================
+STAGED: FOUND | 425 bytes
+ACTIVE: FOUND | 325 bytes
+
+--- STAGED IMPORTS ---
+import {StrictMode} from 'react';
+import {createRoot} from 'react-dom/client';
+import App from './App.tsx';
+import './index.css';
+import './i18n';
+import { registerServiceWorker } from './services/serviceWorker';
+import { AppProviders } from './app/index';
+
+--- ACTIVE IMPORTS ---
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { App } from './App';
+import './styles.css';
+
+RESULT: DIFFERENT
+
+============================================================
+FILE: src\App.tsx
+============================================================
+STAGED: FOUND | 13884 bytes
+ACTIVE: FOUND | 359 bytes
+
+--- STAGED IMPORTS ---
+import React, { Suspense, lazy, useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { TopBar } from "./components/TopBar";
+import { Navbar } from "./components/Navbar";
+import { ViewType } from "./components/Sidebar";
+import { INITIAL_CAMPAIGNS } from "./data";
+import { Campaign } from "./types";
+import { Database, CheckCircle2, AlertTriangle, Info, AlertOctagon } from "lucide-react";
+import { useOnlineStatus } from "./hooks/useOnlineStatus";
+import { useServiceWorker } from "./hooks/useServiceWorker";
+
+--- ACTIVE IMPORTS ---
+No imports detected.
+
+RESULT: DIFFERENT
+
+============================================================
+FILE: src\app\AppProviders.tsx
+============================================================
+STAGED: FOUND | 465 bytes
+ACTIVE: FOUND | 465 bytes
+
+--- STAGED IMPORTS ---
+import type { ReactNode } from "react";
+import { HelmetProvider } from "react-helmet-async";
+import { AnimationProvider } from "../animation/AnimationProvider";
+import { ThemeProvider } from "../ThemeContext";
+
+--- ACTIVE IMPORTS ---
+import type { ReactNode } from "react";
+import { HelmetProvider } from "react-helmet-async";
+import { AnimationProvider } from "../animation/AnimationProvider";
+import { ThemeProvider } from "../ThemeContext";
+
+RESULT: IDENTICAL
+
+============================================================
+FILE: src\ThemeContext.tsx
+============================================================
+STAGED: FOUND | 9012 bytes
+ACTIVE: FOUND | 8991 bytes
+
+--- STAGED IMPORTS ---
+import React, { createContext, useContext, useState, useEffect } from "react";
+
+--- ACTIVE IMPORTS ---
+import React, { createContext, useContext, useState, useEffect } from "react";
+
+RESULT: DIFFERENT
+
+============================================================
+FILE: src\i18n.ts
+============================================================
+STAGED: FOUND | 961 bytes
+ACTIVE: FOUND | 961 bytes
+
+--- STAGED IMPORTS ---
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
+
+--- ACTIVE IMPORTS ---
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
+
+RESULT: IDENTICAL
+
+============================================================
+FILE: src\index.css
+============================================================
+STAGED: FOUND | 33536 bytes
+ACTIVE: MISSING
+
+--- STAGED IMPORTS ---
+No imports detected.
+
+
+
+============================================================
+FILE: src\styles.css
+============================================================
+STAGED: FOUND | 3235 bytes
+ACTIVE: FOUND | 1051 bytes
+
+--- STAGED IMPORTS ---
+No imports detected.
+
+--- ACTIVE IMPORTS ---
+No imports detected.
+
+RESULT: DIFFERENT
+
+============================================================
+FILE: src\App.css
+============================================================
+STAGED: FOUND | 3234 bytes
+ACTIVE: MISSING
+
+--- STAGED IMPORTS ---
+No imports detected.
+
+
+
