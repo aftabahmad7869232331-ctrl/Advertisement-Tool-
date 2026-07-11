@@ -1,0 +1,11 @@
+﻿# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+.venv/
+
+# Model and generated data
+models/
+outputs/
+temp/

@@ -1,0 +1,44 @@
+{
+  "name": "bricks-maker-advertisement-studio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Large-scale monorepo for Bricks Maker Advertisement Studio.",
+  "workspaces": [
+    "apps/web",
+    "apps/api",
+    "apps/admin",
+    "apps/render-worker",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev:web",
+    "dev:web": "npm run dev --workspace=@bricks-maker/web",
+    "dev:api": "npm run dev --workspace=@bricks-maker/api",
+    "dev:admin": "npm run dev --workspace=@bricks-maker/admin",
+    "dev:render-worker": "npm run dev --workspace=@bricks-maker/render-worker",
+    "dev:ai-worker": "powershell -ExecutionPolicy Bypass -File scripts/development/start-ai-worker.ps1",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "engines": {
+    "node": ">=20",
+    "npm": ">=10"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.1.1",
+    "@vitejs/plugin-react": "^6.0.3",
+    "eslint": "^10.7.0",
+    "prettier": "^3.9.5",
+    "tsx": "^4.23.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.63.0",
+    "vite": "^8.1.4",
+    "vitest": "^4.1.10"
+  }
+}

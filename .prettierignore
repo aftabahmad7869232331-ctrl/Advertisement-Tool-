@@ -1,0 +1,9 @@
+﻿node_modules
+dist
+build
+coverage
+storage
+.venv
+*.min.js
+*.min.css
+package-lock.json

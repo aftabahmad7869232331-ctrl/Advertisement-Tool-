@@ -1,0 +1,67 @@
+﻿{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "allowJs": false,
+    "checkJs": false,
+    "strict": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "useDefineForClassFields": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "paths": {
+      "@bricks-maker/ui": [
+        "./packages/ui/src"
+      ],
+      "@bricks-maker/effects": [
+        "./packages/effects/src"
+      ],
+      "@bricks-maker/editor-core": [
+        "./packages/editor-core/src"
+      ],
+      "@bricks-maker/studio-core": [
+        "./packages/studio-core/src"
+      ],
+      "@bricks-maker/render-core": [
+        "./packages/render-core/src"
+      ],
+      "@bricks-maker/shared-types": [
+        "./packages/shared-types/src"
+      ],
+      "@bricks-maker/validation": [
+        "./packages/validation/src"
+      ],
+      "@bricks-maker/config": [
+        "./packages/config/src"
+      ],
+      "@bricks-maker/utils": [
+        "./packages/utils/src"
+      ]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    "storage",
+    ".venv"
+  ]
+}
