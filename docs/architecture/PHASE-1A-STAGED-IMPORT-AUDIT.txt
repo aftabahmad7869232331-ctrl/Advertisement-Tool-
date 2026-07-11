@@ -1,0 +1,96 @@
+﻿PHASE 1A — STAGED FRONTEND IMPORT AUDIT
+Generated: 2026-07-12 02:35:15
+Stage: C:\Users\Aftab khan\BRICKS-MAKER-ADVERTISEMENT-STUDIO\migration-staging\phase-1a-frontend-shell
+
+READ-ONLY AUDIT — ACTIVE WEB APP NOT MODIFIED
+
+=== IMPORTS BY FILE ===
+
+[src\app\AppProviders.tsx]
+import type { ReactNode } from "react";
+import { HelmetProvider } from "react-helmet-async";
+import { AnimationProvider } from "../animation/AnimationProvider";
+import { ThemeProvider } from "../ThemeContext";
+
+[src\components\Footer.tsx]
+No imports detected.
+
+[src\components\Navbar.tsx]
+import React, { useState } from "react";
+import {
+import { ViewType } from "./Sidebar";
+import { useTheme } from "../ThemeContext";
+import { navbarTools } from "../tools";
+
+[src\components\TopBar.tsx]
+import React, { useState } from "react";
+import { ViewType } from "./Sidebar";
+import brandLogo from "../assets/brick-maker-brand.png";
+import { Sparkles, ShieldCheck, ChevronDown, Check, Rocket, Palette, Video, FileText, TrendingUp, Globe, Zap } from "lucide-react";
+import { useTheme, ThemeConfig } from "../ThemeContext";
+
+[src\constants\routes.ts]
+No imports detected.
+
+[src\App.tsx]
+import React, { Suspense, lazy, useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { TopBar } from "./components/TopBar";
+import { Navbar } from "./components/Navbar";
+import { ViewType } from "./components/Sidebar";
+import { INITIAL_CAMPAIGNS } from "./data";
+import { Campaign } from "./types";
+import { Database, CheckCircle2, AlertTriangle, Info, AlertOctagon } from "lucide-react";
+import { useOnlineStatus } from "./hooks/useOnlineStatus";
+import { useServiceWorker } from "./hooks/useServiceWorker";
+
+[src\i18n.ts]
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
+
+[src\main.tsx]
+import {StrictMode} from 'react';
+import {createRoot} from 'react-dom/client';
+import App from './App.tsx';
+import './index.css';
+import './i18n';
+import { registerServiceWorker } from './services/serviceWorker';
+import { AppProviders } from './app/index';
+
+[src\ThemeContext.tsx]
+import React, { createContext, useContext, useState, useEffect } from "react";
+
+[src\vite-env.d.ts]
+No imports detected.
+
+=== LOCAL IMPORT RESOLUTION ===
+MISSING  | src\app\AppProviders.tsx | ../animation/AnimationProvider
+RESOLVED | src\app\AppProviders.tsx | ../ThemeContext
+MISSING  | src\components\Navbar.tsx | ./Sidebar
+RESOLVED | src\components\Navbar.tsx | ../ThemeContext
+MISSING  | src\components\Navbar.tsx | ../tools
+MISSING  | src\components\TopBar.tsx | ./Sidebar
+MISSING  | src\components\TopBar.tsx | ../assets/brick-maker-brand.png
+RESOLVED | src\components\TopBar.tsx | ../ThemeContext
+RESOLVED | src\App.tsx | ./components/TopBar
+RESOLVED | src\App.tsx | ./components/Navbar
+MISSING  | src\App.tsx | ./components/Sidebar
+MISSING  | src\App.tsx | ./data
+MISSING  | src\App.tsx | ./types
+MISSING  | src\App.tsx | ./hooks/useOnlineStatus
+MISSING  | src\App.tsx | ./hooks/useServiceWorker
+RESOLVED | src\main.tsx | ./App.tsx
+MISSING  | src\main.tsx | ./services/serviceWorker
+MISSING  | src\main.tsx | ./app/index
+
+=== EXTERNAL PACKAGES ===
+framer-motion
+i18next
+lucide-react
+react
+react-dom
+react-helmet-async
+react-i18next
+
+=== CSS IMPORTS ===
+src\main.tsx | import './index.css';

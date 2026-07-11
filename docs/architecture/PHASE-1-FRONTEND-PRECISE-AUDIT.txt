@@ -1,0 +1,312 @@
+﻿PHASE 1 — PRECISE FRONTEND AUDIT
+Generated: 2026-07-12 02:15:46
+Frontend source: C:\Users\Aftab khan\BRICK-MAKER-IDA\frontend
+
+READ-ONLY AUDIT — NO FILES COPIED
+
+=== FRONTEND ROOT FILES ===
+[ROOT-FILE] firebase-applet-config.json | 340 bytes
+[ROOT-FILE] firebase-blueprint.json | 1550 bytes
+[ROOT-FILE] firestore.rules | 464 bytes
+[ROOT-FILE] FOLDER_CONCEPTS.md | 4215 bytes
+[ROOT-FILE] index.html | 1577 bytes
+[ROOT-FILE] metadata.json | 296 bytes
+[ROOT-FILE] postcss.config.cjs | 71 bytes
+[ROOT-FILE] tailwind.config.js | 128 bytes
+[ROOT-FILE] tsconfig.json | 557 bytes
+[ROOT-FILE] vite.config.ts | 1506 bytes
+
+=== SRC TOP LEVEL ===
+[SRC-DIR] src\accessibility
+[SRC-DIR] src\animation
+[SRC-DIR] src\app
+[SRC-DIR] src\assets
+[SRC-DIR] src\components
+[SRC-DIR] src\config
+[SRC-DIR] src\constants
+[SRC-DIR] src\dashboard
+[SRC-DIR] src\data
+[SRC-DIR] src\features
+[SRC-DIR] src\glass
+[SRC-DIR] src\hooks
+[SRC-DIR] src\lib
+[SRC-DIR] src\motion
+[SRC-DIR] src\pages
+[SRC-DIR] src\pwa
+[SRC-DIR] src\services
+[SRC-DIR] src\styles
+[SRC-DIR] src\themes
+[SRC-DIR] src\tools
+[SRC-DIR] src\types
+[SRC-DIR] src\utils
+[SRC-FILE] src\App.css | 3234 bytes
+[SRC-FILE] src\App.tsx | 13884 bytes
+[SRC-FILE] src\App.tsx.codex-backup | 13820 bytes
+[SRC-FILE] src\data.ts | 18323 bytes
+[SRC-FILE] src\i18n.ts | 961 bytes
+[SRC-FILE] src\index.css | 33536 bytes
+[SRC-FILE] src\localStore.ts | 6847 bytes
+[SRC-FILE] src\main.tsx | 425 bytes
+[SRC-FILE] src\styles.css | 3235 bytes
+[SRC-FILE] src\ThemeContext.tsx | 9012 bytes
+[SRC-FILE] src\types.ts | 14115 bytes
+[SRC-FILE] src\vite-env.d.ts | 366 bytes
+
+=== ENTRY FILES ===
+[ENTRY] src\main.tsx | 425 bytes
+[ENTRY] src\App.tsx | 13884 bytes
+[ENTRY] src\index.css | 33536 bytes
+[ENTRY] src\styles.css | 3235 bytes
+
+=== COMPONENT FILES ===
+[CODE] src\accessibility\TextToSpeech.tsx | 400 bytes
+[CODE] src\accessibility\TextToSpeechReader.tsx | 2962 bytes
+[CODE] src\accessibility\VoiceCommand.tsx | 835 bytes
+[CODE] src\animation\AnimationProvider.tsx | 4341 bytes
+[CODE] src\App.tsx | 13884 bytes
+[CODE] src\app\AppProviders.tsx | 465 bytes
+[CODE] src\app\index.ts | 169 bytes
+[CODE] src\components\AdsView.tsx | 97352 bytes
+[CODE] src\components\AnalyticsView.tsx | 21673 bytes
+[CODE] src\components\AnimationControlTool.tsx | 1892 bytes
+[CODE] src\components\animations\AnimatedBorder.tsx | 702 bytes
+[CODE] src\components\animations\AnimatedGrid.tsx | 691 bytes
+[CODE] src\components\animations\AuroraBackground.tsx | 1371 bytes
+[CODE] src\components\animations\BeamLight.tsx | 638 bytes
+[CODE] src\components\animations\CountUp.tsx | 616 bytes
+[CODE] src\components\animations\CursorFollower.tsx | 495 bytes
+[CODE] src\components\animations\FloatingParticles.tsx | 1180 bytes
+[CODE] src\components\animations\GlowPulse.tsx | 678 bytes
+[CODE] src\components\animations\index.ts | 810 bytes
+[CODE] src\components\animations\MagneticButton.tsx | 1021 bytes
+[CODE] src\components\animations\MouseGlow.tsx | 644 bytes
+[CODE] src\components\animations\OrbitSystem.tsx | 1048 bytes
+[CODE] src\components\animations\PageTransition.tsx | 550 bytes
+[CODE] src\components\animations\ScrollReveal.tsx | 691 bytes
+[CODE] src\components\animations\StarField.tsx | 853 bytes
+[CODE] src\components\BrickScene.jsx | 2662 bytes
+[CODE] src\components\CaptionView.tsx | 16319 bytes
+[CODE] src\components\Footer.tsx | 217 bytes
+[CODE] src\components\GalleryView.tsx | 97631 bytes
+[CODE] src\components\GrowthView.tsx | 33398 bytes
+[CODE] src\components\home\FeatureBar.jsx | 1106 bytes
+[CODE] src\components\home\GlassPrismCube.jsx | 2151 bytes
+[CODE] src\components\home\Header.jsx | 1539 bytes
+[CODE] src\components\home\HeroSection.jsx | 5973 bytes
+[CODE] src\components\home\HomePage.tsx | 14297 bytes
+[CODE] src\components\home\StatsSection.jsx | 1428 bytes
+[CODE] src\components\home\StudioCoreCard.jsx | 3181 bytes
+[CODE] src\components\image-generator\AdvancedSettingsDrawer.tsx | 2234 bytes
+[CODE] src\components\image-generator\GeneratedResultsGrid.tsx | 2718 bytes
+[CODE] src\components\image-generator\GenerationSettings.tsx | 1142 bytes
+[CODE] src\components\image-generator\ImageGeneratorSidebar.tsx | 3104 bytes
+[CODE] src\components\image-generator\PromptComposer.tsx | 2795 bytes
+[CODE] src\components\image-generator\ResultActions.tsx | 523 bytes
+[CODE] src\components\LoginView.tsx | 14716 bytes
+[CODE] src\components\Navbar.tsx | 10202 bytes
+[CODE] src\components\PremiumView.tsx | 26855 bytes
+[CODE] src\components\ProjectsView.tsx | 12258 bytes
+[CODE] src\components\Sidebar.tsx | 117 bytes
+[CODE] src\components\StudioView.tsx | 58761 bytes
+[CODE] src\components\SupportView.tsx | 54443 bytes
+[CODE] src\components\ThemePaletteTool.tsx | 6008 bytes
+[CODE] src\components\TopBar.tsx | 20717 bytes
+[CODE] src\components\VideoView.tsx | 98992 bytes
+[CODE] src\config\wan21.config.ts | 12564 bytes
+[CODE] src\constants\animations.ts | 1494 bytes
+[CODE] src\constants\colors.ts | 211 bytes
+[CODE] src\constants\config.ts | 302 bytes
+[CODE] src\constants\currencies.ts | 544 bytes
+[CODE] src\constants\icons.ts | 412 bytes
+[CODE] src\constants\permissions.ts | 701 bytes
+[CODE] src\constants\plans.ts | 682 bytes
+[CODE] src\constants\routes.ts | 367 bytes
+[CODE] src\constants\socialMedia.ts | 301 bytes
+[CODE] src\constants\themes.ts | 306 bytes
+[CODE] src\dashboard\OnlineStatus\constants.ts | 0 bytes
+[CODE] src\dashboard\OnlineStatus\index.tsx | 0 bytes
+[CODE] src\dashboard\OnlineStatus\types.ts | 0 bytes
+[CODE] src\dashboard\StatsGrid\constants.ts | 0 bytes
+[CODE] src\dashboard\StatsGrid\index.tsx | 1461 bytes
+[CODE] src\dashboard\StatsGrid\types.ts | 0 bytes
+[CODE] src\data.ts | 18323 bytes
+[CODE] src\data\index.ts | 87 bytes
+[CODE] src\features\reel-editor\config.ts | 427 bytes
+[CODE] src\features\reel-editor\engine\reel-engine.ts | 14018 bytes
+[CODE] src\features\reel-editor\hooks\useReelEditor.ts | 4423 bytes
+[CODE] src\features\reel-editor\index.ts | 482 bytes
+[CODE] src\features\reel-editor\ReelEditorShell.tsx | 12393 bytes
+[CODE] src\glass\GlassBadge\constants.ts | 0 bytes
+[CODE] src\glass\GlassBadge\index.tsx | 0 bytes
+[CODE] src\glass\GlassBadge\types.ts | 0 bytes
+[CODE] src\glass\GlassButton\constants.ts | 0 bytes
+[CODE] src\glass\GlassButton\index.tsx | 0 bytes
+[CODE] src\glass\GlassButton\types.ts | 0 bytes
+[CODE] src\glass\GlassCard\constants.ts | 0 bytes
+[CODE] src\glass\GlassCard\index.tsx | 0 bytes
+[CODE] src\glass\GlassCard\types.ts | 0 bytes
+[CODE] src\glass\GlassPrismCube\constants.ts | 338 bytes
+[CODE] src\glass\GlassPrismCube\index.tsx | 1193 bytes
+[CODE] src\glass\GlassPrismCube\tools\AnimationEngine.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\APIManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\AudioManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\BrowserSupport.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\ClipboardManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\CurrencyManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\CursorManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\DeviceDetector.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\DownloadManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\ErrorLogger.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\Fullscreen.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\GlassEngine.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\index.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\KeyboardManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\LanguageManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\LazyLoader.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\MotionManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\MouseManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\NetworkManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\NotificationManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\OfflineManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\ParticleEngine.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\PerformanceMonitor.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\RouteTransition.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\Screenshot.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\ScrollManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\ServiceWorkerManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\StorageManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\ThemeManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\ThemeStorage.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\ThreeEngine.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\ToastManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\UploadManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\tools\ViewportManager.ts | 1 bytes
+[CODE] src\glass\GlassPrismCube\types.ts | 188 bytes
+[CODE] src\hooks\useActivityLog.ts | 1070 bytes
+[CODE] src\hooks\useCounter.ts | 783 bytes
+[CODE] src\hooks\useCountUp.ts | 1207 bytes
+[CODE] src\hooks\useCursor.ts | 1312 bytes
+[CODE] src\hooks\useGemini.ts | 1220 bytes
+[CODE] src\hooks\useGlowCursor.ts | 908 bytes
+[CODE] src\hooks\useHomePage.ts | 5774 bytes
+[CODE] src\hooks\useImageGenerator.ts | 3058 bytes
+[CODE] src\hooks\useIntersection.ts | 1190 bytes
+[CODE] src\hooks\useMagnetic.ts | 1389 bytes
+[CODE] src\hooks\useMouseGlow.js | 1143 bytes
+[CODE] src\hooks\useMouseParallax.ts | 921 bytes
+[CODE] src\hooks\useOiOiAi.ts | 1886 bytes
+[CODE] src\hooks\useOnlineStatus.ts | 485 bytes
+[CODE] src\hooks\useProjectFilters.ts | 1491 bytes
+[CODE] src\hooks\useProjectForm.ts | 6758 bytes
+[CODE] src\hooks\useProjects.ts | 3183 bytes
+[CODE] src\hooks\useProjectsCreator.ts | 6233 bytes
+[CODE] src\hooks\useProjectWorkspaceTheme.ts | 1295 bytes
+[CODE] src\hooks\useScrollReveal.js | 378 bytes
+[CODE] src\hooks\useScrollReveal.ts | 495 bytes
+[CODE] src\hooks\useServiceWorker.ts | 442 bytes
+[CODE] src\hooks\useTextToSpeech.ts | 6564 bytes
+[CODE] src\hooks\useThemeTool.ts | 17437 bytes
+[CODE] src\hooks\useToast.ts | 880 bytes
+[CODE] src\hooks\useWindowSize.ts | 1124 bytes
+[CODE] src\i18n.ts | 961 bytes
+[CODE] src\lib\color.ts | 413 bytes
+[CODE] src\lib\constants.ts | 2209 bytes
+[CODE] src\localStore.ts | 6847 bytes
+[CODE] src\main.tsx | 425 bytes
+[CODE] src\motion\animations.js | 1146 bytes
+[CODE] src\motion\MotionWrapper.jsx | 405 bytes
+[CODE] src\pages\About.tsx | 298 bytes
+[CODE] src\pages\AdsPage.tsx | 458 bytes
+[CODE] src\pages\AnalyticsPage.tsx | 264 bytes
+[CODE] src\pages\AnimationPage.tsx | 5610 bytes
+[CODE] src\pages\CaptionPage.tsx | 126 bytes
+[CODE] src\pages\Contact.tsx | 286 bytes
+[CODE] src\pages\Dashboard.tsx | 209 bytes
+[CODE] src\pages\GalleryPage.tsx | 126 bytes
+[CODE] src\pages\GrowthPage.tsx | 122 bytes
+[CODE] src\pages\Home.tsx | 200 bytes
+[CODE] src\pages\index.ts | 924 bytes
+[CODE] src\pages\LoginPage.tsx | 359 bytes
+[CODE] src\pages\PremiumPage.tsx | 126 bytes
+[CODE] src\pages\ProjectsPage.tsx | 130 bytes
+[CODE] src\pages\StudioPage.tsx | 277 bytes
+[CODE] src\pages\SupportPage.tsx | 278 bytes
+[CODE] src\pages\TemplatesPage.tsx | 494 bytes
+[CODE] src\pages\VideoPage.tsx | 316 bytes
+[CODE] src\pwa\service-worker.ts | 9501 bytes
+[CODE] src\services\aiService.ts | 711 bytes
+[CODE] src\services\analyticsService.ts | 866 bytes
+[CODE] src\services\api.js | 243 bytes
+[CODE] src\services\auth.service.ts | 58 bytes
+[CODE] src\services\auth.ts | 12484 bytes
+[CODE] src\services\authService.ts | 1533 bytes
+[CODE] src\services\backendHealth.ts | 854 bytes
+[CODE] src\services\billing.ts | 744 bytes
+[CODE] src\services\campaignService.ts | 1135 bytes
+[CODE] src\services\data.service.ts | 12780 bytes
+[CODE] src\services\imageGenerationService.ts | 1156 bytes
+[CODE] src\services\imageService.ts | 710 bytes
+[CODE] src\services\monitoring.ts | 13465 bytes
+[CODE] src\services\paymentService.ts | 766 bytes
+[CODE] src\services\security.ts | 12354 bytes
+[CODE] src\services\serviceWorker.ts | 814 bytes
+[CODE] src\services\uploadService.ts | 823 bytes
+[CODE] src\services\videoService.ts | 1032 bytes
+[CODE] src\services\wan21Service.ts | 6058 bytes
+[CODE] src\ThemeContext.tsx | 9012 bytes
+[CODE] src\tools\home\HomeTool.ts | 255 bytes
+[CODE] src\tools\home\HomeToolPage.tsx | 203 bytes
+[CODE] src\tools\home\index.ts | 136 bytes
+[CODE] src\tools\home\types.ts | 234 bytes
+[CODE] src\tools\index.ts | 192 bytes
+[CODE] src\tools\navbarTools.tsx | 1389 bytes
+[CODE] src\types.ts | 14115 bytes
+[CODE] src\types\advanced.types.ts | 11672 bytes
+[CODE] src\types\auth.ts | 364 bytes
+[CODE] src\types\campaign.ts | 529 bytes
+[CODE] src\types\dashboard.ts | 247 bytes
+[CODE] src\types\imageGenerator.ts | 1211 bytes
+[CODE] src\types\index.ts | 217 bytes
+[CODE] src\types\notification.ts | 228 bytes
+[CODE] src\types\pricing.ts | 253 bytes
+[CODE] src\types\Project.ts | 860 bytes
+[CODE] src\types\template.ts | 185 bytes
+[CODE] src\types\theme.ts | 241 bytes
+[CODE] src\types\user.ts | 429 bytes
+[CODE] src\utils\copyClipboard.ts | 210 bytes
+[CODE] src\utils\debounce.ts | 366 bytes
+[CODE] src\utils\downloadImage.ts | 562 bytes
+[CODE] src\utils\downloadVideo.ts | 422 bytes
+[CODE] src\utils\formatDate.ts | 388 bytes
+[CODE] src\utils\formatPrice.ts | 232 bytes
+[CODE] src\utils\generateId.ts | 219 bytes
+[CODE] src\utils\helpers.ts | 302 bytes
+[CODE] src\utils\storage.ts | 522 bytes
+[CODE] src\utils\validators.ts | 625 bytes
+[CODE] src\vite-env.d.ts | 366 bytes
+
+=== STYLE FILES ===
+[STYLE] src\App.css | 3234 bytes
+[STYLE] src\components\image-generator\imageGenerator.css | 16192 bytes
+[STYLE] src\dashboard\OnlineStatus\OnlineStatus.module.css | 0 bytes
+[STYLE] src\dashboard\StatsGrid\StatsGrid.module.css | 0 bytes
+[STYLE] src\features\reel-editor\reel-editor.css | 13072 bytes
+[STYLE] src\glass\GlassBadge\GlassBadge.module.css | 0 bytes
+[STYLE] src\glass\GlassButton\GlassButton.module.css | 0 bytes
+[STYLE] src\glass\GlassCard\GlassCard.module.css | 0 bytes
+[STYLE] src\glass\GlassPrismCube\GlassPrismCube.module.css | 2744 bytes
+[STYLE] src\index.css | 33536 bytes
+[STYLE] src\styles.css | 3235 bytes
+[STYLE] src\styles\animations.css | 2300 bytes
+[STYLE] src\styles\dashboard.css | 18485 bytes
+[STYLE] src\styles\glass.css | 29728 bytes
+[STYLE] src\styles\neon.css | 4021 bytes
+
+=== ASSET FILES ===
+[ASSET] src\assets\brick-maker-brand.png | 805084 bytes
+[ASSET] src\assets\hero.png | 13057 bytes
+[ASSET] src\assets\images\brick-maker-brand.jpg | 805084 bytes
+[ASSET] src\assets\images\brick-maker-brand.png | 805084 bytes
+[ASSET] src\assets\images\home page shot.jpg | 133866 bytes
+[ASSET] src\assets\react.svg | 4126 bytes
+[ASSET] src\assets\vite.svg | 8709 bytes

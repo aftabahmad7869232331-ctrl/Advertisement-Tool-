@@ -1,0 +1,37 @@
+.aurora-scene, .particles { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+.aurora-scene { z-index: 0; background:
+  radial-gradient(circle at 73% 35%, color-mix(in srgb, var(--blue) 18%, transparent), transparent 25%),
+  radial-gradient(circle at 13% 54%, color-mix(in srgb, var(--purple) 19%, transparent), transparent 25%),
+  radial-gradient(circle at 83% 79%, color-mix(in srgb, var(--gold) 15%, transparent), transparent 22%),
+  linear-gradient(155deg, var(--theme-background, #010208) 10%, color-mix(in srgb, var(--theme-surface, #06091b) 82%, black) 43%, var(--theme-background, #010208) 82%);
+}
+.mesh-grid { position: absolute; inset: -8%; opacity: .45; background-image:
+  linear-gradient(30deg, transparent 47%, rgba(30,113,255,.2) 48%, transparent 49%),
+  linear-gradient(150deg, transparent 47%, rgba(151,40,255,.14) 48%, transparent 49%);
+  background-size: 130px 90px; mask-image: radial-gradient(ellipse, black, transparent 72%); transition: transform .3s ease-out;
+}
+.crystal { position: absolute; width: 360px; height: 500px; opacity: .28; filter: drop-shadow(0 0 18px currentColor); animation: crystalFloat 11s ease-in-out infinite; }
+.crystal::before, .crystal::after { content: ""; position: absolute; inset: 0; clip-path: polygon(50% 0, 100% 70%, 58% 100%, 10% 62%); border: 2px solid currentColor; background: linear-gradient(145deg, transparent, currentColor); opacity: .22; }
+.crystal::after { transform: scale(.72) rotate(23deg); opacity: .4; }
+.crystal--one { color: #006cff; left: -130px; top: 35%; transform: rotate(-26deg); }
+.crystal--two { color: #8d21ff; right: -190px; top: 22%; animation-delay: -4s; transform: rotate(18deg); }
+.crystal--three { color: #ff8800; right: 9%; bottom: -310px; animation-delay: -7s; }
+.light-ray { position: absolute; width: 75%; height: 1px; filter: blur(.2px) drop-shadow(0 0 8px currentColor); transform-origin: left; animation: raySweep 9s ease-in-out infinite; }
+.light-ray::after { content:""; position:absolute; left:35%; top:-3px; width:8px; height:8px; border-radius:50%; background:white; box-shadow:0 0 22px currentColor; }
+.light-ray--blue { color:#087dff; background:linear-gradient(90deg,transparent,currentColor,transparent); left:8%; top:28%; transform:rotate(-12deg); }
+.light-ray--gold { color:#ff9f12; background:linear-gradient(90deg,transparent,currentColor,transparent); left:28%; top:13%; transform:rotate(12deg); animation-delay:-4s; }
+.aurora { position: absolute; width: 80%; height: 38%; bottom: -22%; left: -16%; border-radius: 50%; filter: blur(42px); opacity: .25; transform: rotate(-12deg); animation: auroraFlow 10s ease-in-out infinite alternate; }
+.aurora--blue { border: 5px solid #008dff; box-shadow: inset 0 0 50px #0055ff, 0 0 65px #0055ff; }
+.aurora--purple { bottom: -16%; left: 18%; border: 5px solid #c217ff; box-shadow: inset 0 0 50px #8a0dff, 0 0 65px #8a0dff; animation-delay: -4s; }
+.particles { z-index: 1; }
+.particle { position:absolute; border-radius:50%; background:#fff; box-shadow:0 0 8px 2px currentColor; animation: particleDrift 7s ease-in-out infinite; }
+.particle--0 { color:#168cff; }.particle--1 { color:#ffb321; }.particle--2 { color:#c03cff; }
+.cursor-glow { position:fixed; z-index:4; left:-170px; top:-170px; width:340px; height:340px; border-radius:50%; pointer-events:none; opacity:.5; background:radial-gradient(circle,rgba(39,118,255,.08),transparent 65%); transition:opacity .2s; }
+
+[data-crystal-theme="cosmic"] { --gold:#d8b2ff; --gold-soft:#f0dcff; }
+[data-crystal-theme="ember"] { --blue:#ff642e; --cyan:#ffb02e; --purple:#d1265c; }
+
+@keyframes crystalFloat { 0%,100% { translate:0 0; } 50% { translate:22px -28px; rotate:4deg; } }
+@keyframes raySweep { 0%,100% { opacity:.18; scale:.8 1; } 50% { opacity:.8; scale:1.15 1; } }
+@keyframes auroraFlow { to { transform:translate(35%, -42%) rotate(-6deg) scale(1.22); opacity:.42; } }
+@keyframes particleDrift { 0%,100% { transform:translate(0,0); opacity:.15; } 50% { transform:translate(16px,-35px); opacity:.9; } }

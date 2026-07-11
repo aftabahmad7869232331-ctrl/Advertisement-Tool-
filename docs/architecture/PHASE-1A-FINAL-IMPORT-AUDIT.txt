@@ -1,0 +1,60 @@
+﻿PHASE 1A — FINAL FRONTEND IMPORT AUDIT
+Generated: 2026-07-12 02:56:48
+Stage: C:\Users\Aftab khan\BRICKS-MAKER-ADVERTISEMENT-STUDIO\migration-staging\phase-1a-frontend-shell
+
+READ-ONLY AUDIT — ACTIVE WEB APP NOT MODIFIED
+
+=== LOCAL IMPORT RESOLUTION ===
+RESOLVED | src\app\AppProviders.tsx | ../animation/AnimationProvider
+RESOLVED | src\app\AppProviders.tsx | ../ThemeContext
+RESOLVED | src\app\index.ts | ./AppProviders
+RESOLVED | src\components\home\HomePage.tsx | ../../types
+MISSING  | src\components\home\HomePage.tsx | ../../hooks/useHomePage
+MISSING  | src\components\home\HomePage.tsx | ./StudioCoreCard
+RESOLVED-CSS | src\components\home\HomePage.tsx | ../../styles/glass.css
+RESOLVED | src\components\Navbar.tsx | ./Sidebar
+RESOLVED | src\components\Navbar.tsx | ../ThemeContext
+RESOLVED | src\components\Navbar.tsx | ../tools
+RESOLVED | src\components\Sidebar.tsx | ../types
+RESOLVED | src\components\TopBar.tsx | ./Sidebar
+RESOLVED | src\components\TopBar.tsx | ../assets/brick-maker-brand.png
+RESOLVED | src\components\TopBar.tsx | ../ThemeContext
+RESOLVED | src\services\auth.service.ts | ./auth
+RESOLVED | src\services\auth.service.ts | ./auth
+RESOLVED | src\services\auth.ts | ../types/advanced.types
+RESOLVED | src\services\auth.ts | ../config/wan21.config
+RESOLVED | src\tools\home\HomeTool.ts | ../../components/Sidebar
+RESOLVED | src\tools\home\HomeToolPage.tsx | ../../components/home/HomePage
+RESOLVED | src\tools\home\HomeToolPage.tsx | ./types
+RESOLVED | src\tools\home\index.ts | ./HomeTool
+RESOLVED | src\tools\home\index.ts | ./HomeToolPage
+RESOLVED | src\tools\home\index.ts | ./types
+RESOLVED | src\tools\home\types.ts | ../../types
+RESOLVED | src\tools\index.ts | ./navbarTools
+RESOLVED | src\tools\index.ts | ./navbarTools
+RESOLVED | src\tools\index.ts | ./home
+RESOLVED | src\tools\index.ts | ./home
+RESOLVED | src\tools\navbarTools.tsx | ../components/Sidebar
+RESOLVED | src\App.tsx | ./components/TopBar
+RESOLVED | src\App.tsx | ./components/Navbar
+RESOLVED | src\App.tsx | ./components/Sidebar
+RESOLVED | src\App.tsx | ./data
+RESOLVED | src\App.tsx | ./types
+RESOLVED | src\App.tsx | ./hooks/useOnlineStatus
+RESOLVED | src\App.tsx | ./hooks/useServiceWorker
+RESOLVED | src\data.ts | ./types/advanced.types
+RESOLVED | src\data.ts | ./config/wan21.config
+RESOLVED | src\data.ts | ./services/auth
+RESOLVED | src\main.tsx | ./App.tsx
+RESOLVED-CSS | src\main.tsx | ./index.css
+RESOLVED | src\main.tsx | ./services/serviceWorker
+RESOLVED | src\main.tsx | ./app/index
+
+=== EXTERNAL PACKAGES ===
+framer-motion
+i18next
+lucide-react
+react
+react-dom
+react-helmet-async
+react-i18next

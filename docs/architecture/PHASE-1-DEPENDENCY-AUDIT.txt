@@ -1,0 +1,85 @@
+﻿PHASE 1 — FRONTEND DEPENDENCY AND IMPORT AUDIT
+Generated: 2026-07-12 02:19:21
+Source: C:\Users\Aftab khan\BRICK-MAKER-IDA\frontend
+
+READ-ONLY AUDIT — NO FILES COPIED
+
+=== PACKAGE DEPENDENCIES ===
+[MISSING] frontend\package.json
+
+=== IMPORTANT FILE IMPORTS ===
+
+[src\main.tsx]
+import {StrictMode} from 'react';
+import {createRoot} from 'react-dom/client';
+import App from './App.tsx';
+import './index.css';
+import './i18n';
+import { registerServiceWorker } from './services/serviceWorker';
+import { AppProviders } from './app/index';
+
+[src\App.tsx]
+import React, { Suspense, lazy, useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { TopBar } from "./components/TopBar";
+import { Navbar } from "./components/Navbar";
+import { ViewType } from "./components/Sidebar";
+import { INITIAL_CAMPAIGNS } from "./data";
+import { Campaign } from "./types";
+import { Database, CheckCircle2, AlertTriangle, Info, AlertOctagon } from "lucide-react";
+import { useOnlineStatus } from "./hooks/useOnlineStatus";
+import { useServiceWorker } from "./hooks/useServiceWorker";
+
+[src\ThemeContext.tsx]
+import React, { createContext, useContext, useState, useEffect } from "react";
+
+[src\data.ts]
+import type { ApiResponse, AsyncResult } from './types/advanced.types';
+import { getConfig } from './config/wan21.config';
+import AuthService from './services/auth';
+
+[src\localStore.ts]
+import { Campaign, GalleryAsset, SupportTicket, FaqArticle, FeedbackMessage } from "./types";
+import { Project } from "./types/Project";
+import { INITIAL_CAMPAIGNS, INITIAL_PROJECTS } from "./data";
+
+[src\types.ts]
+No imports detected.
+
+[src\i18n.ts]
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
+
+=== DIRECTORY COUNTS ===
+src\app | Files: 3
+src\components | Files: 47
+src\features | Files: 6
+src\pages | Files: 19
+src\services | Files: 20
+src\hooks | Files: 27
+src\config | Files: 2
+src\constants | Files: 11
+src\types | Files: 12
+src\utils | Files: 11
+src\themes | Files: 1
+src\animation | Files: 1
+src\motion | Files: 2
+src\glass | Files: 50
+src\pwa | Files: 1
+src\accessibility | Files: 3
+
+=== EXTERNAL IMPORT PACKAGES USED IN SRC ===
+@react-three/drei
+@react-three/fiber
+axios
+framer-motion
+i18next
+lucide-react
+motion
+react
+react-dom
+react-helmet-async
+react-i18next
+recharts
+three
+tone

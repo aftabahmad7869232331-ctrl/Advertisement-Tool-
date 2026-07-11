@@ -1,0 +1,14 @@
+.prism-stage { position:absolute; inset:11% 8%; display:grid; place-items:center; perspective:850px; }
+.prism-glow { position:absolute; width:42%; aspect-ratio:1; border-radius:50%; background:radial-gradient(circle,#fff 0,#ffc31b 8%,#9d22ff 35%,#047bff 54%,transparent 70%); filter:blur(16px); opacity:.7; animation:prismPulse 3s ease-in-out infinite; }
+.prism-pulse{z-index:2}.prism-cube { position:relative; width:142px; height:142px; transform-style:preserve-3d; animation:cubeRotate 14s linear infinite; }
+.bundle-orbit-system{position:absolute!important;inset:50%;z-index:1}.bundle-orbit-system>div{position:absolute}
+.prism-face { position:absolute; inset:0; display:grid; place-items:center; border:2px solid rgba(255,211,67,.9); background:linear-gradient(145deg,rgba(255,182,20,.18),rgba(34,104,255,.2) 48%,rgba(181,38,255,.22)); box-shadow:inset 0 0 30px rgba(44,101,255,.2),0 0 18px rgba(171,36,255,.4); backdrop-filter:blur(6px); }
+.prism-face span { font:800 34px "Space Grotesk"; color:#ffd137; text-shadow:0 2px 2px #000,0 0 18px #ff9c00; }
+.prism-face--front{transform:translateZ(71px)}.prism-face--back{transform:rotateY(180deg) translateZ(71px)}.prism-face--right{transform:rotateY(90deg) translateZ(71px)}.prism-face--left{transform:rotateY(-90deg) translateZ(71px)}.prism-face--top{transform:rotateX(90deg) translateZ(71px)}.prism-face--bottom{transform:rotateX(-90deg) translateZ(71px)}
+.orbit-ring { position:absolute; width:84%; height:54%; border:1px solid rgba(255,174,23,.78); border-radius:50%; transform:rotate(-16deg); box-shadow:0 0 10px rgba(255,151,17,.24); animation:orbitSpin 9s linear infinite; }
+.orbit-ring--two { width:67%; height:82%; transform:rotate(63deg); border-color:rgba(31,125,255,.8); animation-duration:12s; animation-direction:reverse; }
+.orbit-ring i { position:absolute; width:8px; height:8px; border-radius:50%; background:#fff; box-shadow:0 0 7px 3px #ffb117,0 0 20px #fff; }
+.orbit-ring i:nth-child(1){left:10%;top:12%}.orbit-ring i:nth-child(2){right:2%;top:48%}.orbit-ring i:nth-child(3){left:43%;bottom:-4px}
+@keyframes cubeRotate { from { transform:rotateX(-13deg) rotateY(0deg); } to { transform:rotateX(-13deg) rotateY(360deg); } }
+@keyframes orbitSpin { to { rotate:360deg; } }
+@keyframes prismPulse { 50% { scale:1.18; opacity:.92; } }

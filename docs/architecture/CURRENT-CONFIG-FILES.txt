@@ -1,0 +1,21 @@
+﻿
+FullName                                                          Length LastWriteTime        
+--------                                                          ------ -------------        
+C:\Users\Aftab khan\BRICK-MAKER-IDA\.env.example                    4915 7/11/2026 12:46:48 PM
+C:\Users\Aftab khan\BRICK-MAKER-IDA\package-lock.json             387912 7/11/2026 5:26:27 PM 
+C:\Users\Aftab khan\BRICK-MAKER-IDA\package.json                    2072 7/11/2026 12:46:48 PM
+C:\Users\Aftab khan\BRICK-MAKER-IDA\requirements-windows.txt         218 7/11/2026 12:46:49 PM
+C:\Users\Aftab khan\BRICK-MAKER-IDA\requirements.txt                 130 7/11/2026 12:46:49 PM
+C:\Users\Aftab khan\BRICK-MAKER-IDA\tsconfig.frontend.json           575 7/11/2026 12:46:49 PM
+C:\Users\Aftab khan\BRICK-MAKER-IDA\tsconfig.json                    113 7/11/2026 12:46:49 PM
+C:\Users\Aftab khan\BRICK-MAKER-IDA\vite.config.ts                  2173 7/11/2026 12:46:49 PM
+C:\Users\Aftab khan\BRICK-MAKER-IDA\backend\Dockerfile               284 7/11/2026 12:46:49 PM
+C:\Users\Aftab khan\BRICK-MAKER-IDA\backend\requirements.txt        1280 7/11/2026 6:59:08 PM 
+C:\Users\Aftab khan\BRICK-MAKER-IDA\backend\tsconfig.json            353 7/11/2026 12:46:49 PM
+C:\Users\Aftab khan\BRICK-MAKER-IDA\backend\app\requirements.txt    1280 7/11/2026 6:59:08 PM 
+C:\Users\Aftab khan\BRICK-MAKER-IDA\docs\requirements-updated.txt     27 7/11/2026 12:46:49 PM
+C:\Users\Aftab khan\BRICK-MAKER-IDA\frontend\tsconfig.json           557 7/11/2026 12:46:49 PM
+C:\Users\Aftab khan\BRICK-MAKER-IDA\frontend\vite.config.ts         1506 7/11/2026 12:46:49 PM
+
+
+

@@ -1,0 +1,50 @@
+﻿PHASE 1 — FRONTEND APPLICATION SHELL AUDIT
+Generated: 2026-07-12 02:09:35
+Source: C:\Users\Aftab khan\BRICK-MAKER-IDA
+
+READ-ONLY AUDIT — NO FILES COPIED
+
+=== ROOT FRONTEND CONFIGURATION FILES ===
+[FOUND] package.json | 2072 bytes
+[FOUND] package-lock.json | 387912 bytes
+[FOUND] index.html | 1586 bytes
+[FOUND] vite.config.ts | 2173 bytes
+[NOT FOUND] vite.config.js
+[FOUND] tsconfig.json | 113 bytes
+[NOT FOUND] tsconfig.app.json
+[NOT FOUND] tsconfig.node.json
+[FOUND] eslint.config.js | 1092 bytes
+[NOT FOUND] eslint.config.mjs
+[NOT FOUND] tailwind.config.js
+[NOT FOUND] tailwind.config.ts
+[NOT FOUND] postcss.config.js
+
+=== FRONTEND ENTRY AND SHELL FILES ===
+
+=== SRC TOP-LEVEL CONTENT ===
+[MISSING] src folder
+
+=== ROUTING FILES ===
+[ROUTE] backend\app\api\routes\__init__.py | 133 bytes
+[ROUTE] backend\app\api\routes\__init__.py.codex-backup | 173 bytes
+[ROUTE] backend\app\api\routes\health.py | 266 bytes
+[ROUTE] backend\app\api\routes\health.py.codex-backup | 268 bytes
+[ROUTE] backend\routes\__init__.py | 29 bytes
+[ROUTE] backend\routes\health.py | 272 bytes
+[ROUTE] backend\routes\health.py.codex-backup | 268 bytes
+[ROUTE] frontend\src\constants\routes.ts | 367 bytes
+[ROUTE] frontend\src\glass\GlassPrismCube\tools\RouteTransition.ts | 1 bytes
+
+=== LAYOUT COMPONENTS ===
+[LAYOUT] frontend\src\components\Footer.tsx | 217 bytes
+[LAYOUT] frontend\src\components\Navbar.tsx | 10202 bytes
+[LAYOUT] frontend\src\components\TopBar.tsx | 20717 bytes
+
+=== GLOBAL STYLE FILES ===
+[STYLE] frontend\src\index.css | 33536 bytes
+[STYLE] frontend\src\styles.css | 3235 bytes
+[STYLE] frontend\src\styles\.gitkeep | 1 bytes
+[STYLE] frontend\src\styles\animations.css | 2300 bytes
+[STYLE] frontend\src\styles\dashboard.css | 18485 bytes
+[STYLE] frontend\src\styles\glass.css | 29728 bytes
+[STYLE] frontend\src\styles\neon.css | 4021 bytes

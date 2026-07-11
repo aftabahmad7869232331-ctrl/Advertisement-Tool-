@@ -1,0 +1,335 @@
+﻿PHASE 1 — FRONTEND MIGRATION READINESS
+Generated: 2026-07-12 02:27:03
+Source: C:\Users\Aftab khan\BRICK-MAKER-IDA\frontend
+
+READ-ONLY AUDIT — NO FILES COPIED OR MODIFIED
+
+=== FIREBASE REFERENCES ===
+src\components\AdsView.tsx:1009 | <span>Project has been successfully synced to Cloud Firestore and added to your Recent Projects registry.</span>
+src\components\GalleryView.tsx:433 | // Load gallery assets from Firestore on mount
+src\components\GalleryView.tsx:717 | // Persist to cloud Firestore
+src\components\GalleryView.tsx:719 | console.error("Failed to sync uploaded asset to Firestore:", err);
+src\components\SupportView.tsx:1084 | Cloud Firestore Active
+src\App.tsx:103 | // Firebase SDK off the critical loading path.
+src\localStore.ts:5 | // Firebase is intentionally disconnected for now.
+src\localStore.ts:6 | // Hosting-time wiring can replace this file with the real Firebase adapter.
+
+=== REACT ROUTER REFERENCES ===
+src\accessibility\TextToSpeechReader.tsx:6 | fallbackApiUrl?: string; // optional backend route for server TTS (e.g. ElevenLabs / Google Cloud TTS)
+src\constants\routes.ts:1 | export const ROUTES = {
+src\constants\routes.ts:8 | export type AppRoute = typeof ROUTES[keyof typeof ROUTES];
+src\hooks\useTextToSpeech.ts:17 | fallbackApiUrl?: string; // your backend route, e.g. "/api/tts"
+src\services\auth.ts:157 | * Called from the /auth/callback route.
+
+=== THREE JS REFERENCES ===
+src\components\home\GlassPrismCube.jsx:1 | import { Canvas, useFrame } from "@react-three/fiber";
+src\components\home\GlassPrismCube.jsx:7 | } from "@react-three/drei";
+src\components\BrickScene.jsx:2 | import * as THREE from 'three'
+src\components\BrickScene.jsx:20 | const scene = new THREE.Scene()
+src\components\BrickScene.jsx:21 | const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100)
+src\components\BrickScene.jsx:24 | const renderer = new THREE.WebGLRenderer({
+src\components\BrickScene.jsx:30 | renderer.outputColorSpace = THREE.SRGBColorSpace
+src\components\BrickScene.jsx:34 | const brickGroup = new THREE.Group()
+src\components\BrickScene.jsx:35 | const geometry = new THREE.BoxGeometry(0.95, 0.48, 0.48)
+src\components\BrickScene.jsx:36 | const material = new THREE.MeshStandardMaterial({
+src\components\BrickScene.jsx:43 | const brick = new THREE.Mesh(geometry, material)
+src\components\BrickScene.jsx:50 | scene.add(new THREE.HemisphereLight(0xffffff, 0x352018, 2.2))
+src\components\BrickScene.jsx:51 | const keyLight = new THREE.DirectionalLight(0xffdfc4, 4)
+src\components\BrickScene.jsx:67 | const clock = new THREE.Clock()
+
+=== TONE AUDIO REFERENCES ===
+src\accessibility\TextToSpeechReader.tsx:83 | (Tone.js). Browser SpeechSynthesis voices use the coarser native `pitch` param, which has
+src\hooks\useTextToSpeech.ts:2 | import * as Tone from "tone";
+src\hooks\useTextToSpeech.ts:37 | * - Real pitch/tone shifting (mota/patla) via Tone.js, independent of playback speed
+src\hooks\useTextToSpeech.ts:47 | const tonePlayerRef = useRef<Tone.Player | null>(null);
+src\hooks\useTextToSpeech.ts:48 | const pitchNodeRef = useRef<Tone.PitchShift | null>(null);
+src\hooks\useTextToSpeech.ts:70 | // --- Fallback: server-based TTS with independent pitch shifting via Tone.js ---
+src\hooks\useTextToSpeech.ts:94 | await Tone.start(); // required: must run after a user gesture in most browsers
+src\hooks\useTextToSpeech.ts:97 | const pitchNode = new Tone.PitchShift(opts.toneSemitones).toDestination();
+src\hooks\useTextToSpeech.ts:98 | const player = new Tone.Player(url, () => {
+src\hooks\useTextToSpeech.ts:103 | player.volume.value = Tone.gainToDb(opts.volume);
+src\hooks\useTextToSpeech.ts:112 | await Tone.loaded();
+src\hooks\useTextToSpeech.ts:185 | tonePlayerRef.current?.stop(); // Tone.Player has no pause; stop + resume-from-start is the tradeoff
+
+=== RECHARTS REFERENCES ===
+src\components\AnalyticsView.tsx:25 | } from "recharts";
+
+=== I18N REFERENCES ===
+src\i18n.ts:1 | import i18n from "i18next";
+src\i18n.ts:2 | import { initReactI18next } from "react-i18next";
+src\i18n.ts:23 | void i18n.use(initReactI18next).init({
+
+=== HELMET REFERENCES ===
+src\app\AppProviders.tsx:2 | import { HelmetProvider } from "react-helmet-async";
+src\app\AppProviders.tsx:8 | <HelmetProvider>
+src\app\AppProviders.tsx:14 | </HelmetProvider>
+
+=== DIRECT BACKEND OR API URLS ===
+src\components\AdsView.tsx:669 | const response = await fetch("/api/generate-pamphlet", {
+src\components\AdsView.tsx:736 | const response = await fetch("/api/generate-ad-image", {
+src\components\AdsView.tsx:756 | const response = await fetch("/api/generate-logo", {
+src\config\wan21.config.ts:138 | redirectUri: import.meta.env.VITE_OAUTH_REDIRECT_URI || 'http://localhost:5173/auth/callback',
+src\config\wan21.config.ts:144 | redirectUri: import.meta.env.VITE_OAUTH_REDIRECT_URI || 'http://localhost:5173/auth/callback',
+src\config\wan21.config.ts:150 | redirectUri: import.meta.env.VITE_OAUTH_REDIRECT_URI || 'http://localhost:5173/auth/callback',
+src\config\wan21.config.ts:187 | corsAllowedOrigins: (import.meta.env.VITE_CORS_ALLOWED_ORIGINS || 'http://localhost:5173')
+src\config\wan21.config.ts:197 | baseUrl:    import.meta.env.VITE_API_BASE_URL || '/api',
+src\config\wan21.config.ts:198 | timeout:    Number(import.meta.env.VITE_API_TIMEOUT)    || 30_000,
+src\config\wan21.config.ts:199 | retryCount: Number(import.meta.env.VITE_API_RETRY_COUNT) || 3,
+src\constants\config.ts:4 | apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "/api",
+src\features\reel-editor\engine\reel-engine.ts:389 | return fetch(endpoint, {
+src\hooks\useGemini.ts:26 | const response = await fetch("/api/suggest-ad-copy", {
+src\hooks\useOiOiAi.ts:22 | const response = await fetch("/api/oioi/status");
+src\hooks\useOiOiAi.ts:39 | const response = await fetch("/api/oioi/generate", {
+src\hooks\useProjectsCreator.ts:151 | const response = await fetch("/api/project-files", {
+src\hooks\useTextToSpeech.ts:17 | fallbackApiUrl?: string; // your backend route, e.g. "/api/tts"
+src\hooks\useTextToSpeech.ts:83 | const res = await fetch(opts.fallbackApiUrl, {
+src\pwa\service-worker.ts:85 | const response = await fetch(new Request(url, { cache: "reload" }));
+src\pwa\service-worker.ts:103 | const response = await fetch(request);
+src\pwa\service-worker.ts:116 | const network = fetch(request).then(async (response) => {
+src\pwa\service-worker.ts:165 | return await fetch(request.clone());
+src\pwa\service-worker.ts:175 | const response = await fetch(item.url, {
+src\pwa\service-worker.ts:264 | const response = await fetch(parsed);
+src\services\aiService.ts:7 | const response = await fetch(`${CONFIG.apiBaseUrl}/content/generate`, {
+src\services\analyticsService.ts:7 | await fetch(`${CONFIG.apiBaseUrl}/analytics/events`, {
+src\services\analyticsService.ts:12 | const response = await fetch(`${CONFIG.apiBaseUrl}/analytics/summary`);
+src\services\api.js:3 | export const api = axios.create({
+src\services\api.js:4 | baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+src\services\auth.ts:102 | const res = await fetch(`${getApiUrl('auth')}/login`, {
+src\services\auth.ts:169 | const res = await fetch(`${getApiUrl('auth')}/oauth/callback`, {
+src\services\auth.ts:199 | const res = await fetch(`${getApiUrl('auth')}/refresh`, {
+src\services\auth.ts:244 | const res = await this._authorizedFetch(`${getApiUrl('auth')}/2fa/enable`, { method: 'POST' });
+src\services\auth.ts:253 | const res = await this._authorizedFetch(`${getApiUrl('auth')}/2fa/verify`, {
+src\services\auth.ts:265 | const res = await this._authorizedFetch(`${getApiUrl('auth')}/2fa/disable`, {
+src\services\auth.ts:281 | const res = await this._authorizedFetch(`${getApiUrl('auth')}/api-keys`, {
+src\services\auth.ts:293 | const res = await this._authorizedFetch(`${getApiUrl('auth')}/api-keys`);
+src\services\auth.ts:302 | const res = await this._authorizedFetch(`${getApiUrl('auth')}/api-keys/${keyId}`, {
+src\services\auth.ts:321 | const res = await this._authorizedFetch(`${getApiUrl('users')}/me`);
+src\services\auth.ts:342 | await fetch(`${getApiUrl('auth')}/logout`, {
+src\services\auth.ts:358 | async _authorizedFetch(url: string, options: RequestInit = {}): Promise<Response> {
+src\services\auth.ts:360 | return fetch(url, {
+src\services\authService.ts:8 | const response = await fetch(`${CONFIG.apiBaseUrl}${path}`, {
+src\services\authService.ts:28 | await fetch(`${CONFIG.apiBaseUrl}/auth/logout`, { method: "POST" }).catch(() => undefined);
+src\services\backendHealth.ts:19 | const response = await fetch("/api/health");
+src\services\backendHealth.ts:26 | const response = await fetch("/api/python/health");
+src\services\billing.ts:14 | const response = await fetch("/api/billing/checkout-session", {
+src\services\data.service.ts:141 | const res = await fetch(req.url, {
+src\services\data.service.ts:259 | const res = await this._fetch(endpoint);
+src\services\data.service.ts:347 | async _fetch(url: string, options: RequestInit = {}): Promise<Response> {
+src\services\data.service.ts:355 | return await fetch(fullUrl, {
+src\services\data.service.ts:378 | const res = await this._fetch(endpoint, {
+src\services\imageGenerationService.ts:11 | const response = await fetch("/api/image-generator/generate", {
+src\services\imageService.ts:7 | const response = await fetch(`${CONFIG.apiBaseUrl}/images/generate`, {
+src\services\monitoring.ts:135 | const res = await fetch(`${cfg.api.baseUrl}/monitoring/errors`, {
+src\services\monitoring.ts:310 | await fetch(`${cfg.api.baseUrl}/monitoring/events`, {
+src\services\monitoring.ts:382 | const res = await fetch(`${cfg.api.baseUrl}/health`, {
+src\services\paymentService.ts:8 | const response = await fetch(`${CONFIG.apiBaseUrl}/payments/checkout`, {
+src\services\security.ts:267 | await fetch(`${baseUrl}${endpoints.users}/audit`, {
+src\services\uploadService.ts:11 | const response = await fetch(`${CONFIG.apiBaseUrl}/uploads`, { method: "POST", body: form });
+src\services\videoService.ts:7 | const response = await fetch(`${CONFIG.apiBaseUrl}/video/generate`, {
+src\services\videoService.ts:14 | const response = await fetch(`${CONFIG.apiBaseUrl}/video/jobs/${encodeURIComponent(id)}`);
+src\services\wan21Service.ts:89 | const res = await fetch("/api/wan21/status");
+src\services\wan21Service.ts:106 | const res = await fetch("/api/wan21/install", { method: "POST" });
+src\services\wan21Service.ts:116 | log: `Wan2.1 installation did not start because the backend endpoint is unavailable.\n\nError: ${message}\n\nStart the app with "npm run dev" and retry after /api/wan21/status is reachable.`
+src\services\wan21Service.ts:126 | await fetch("/api/wan21/reset", { method: "POST" });
+src\services\wan21Service.ts:141 | const res = await fetch("/api/wan21/run-check", { method: "POST" });
+src\services\wan21Service.ts:173 | const res = await fetch("/api/wan21/generate", {
+src\data.ts:141 | const res = await fetch(req.url, {
+src\data.ts:402 | const res = await this._fetch(endpoint);
+src\data.ts:490 | async _fetch(url: string, options: RequestInit = {}): Promise<Response> {
+src\data.ts:498 | return await fetch(fullUrl, {
+src\data.ts:521 | const res = await this._fetch(endpoint, {
+
+=== IMPORTANT SHELL FILE CONTENT HEADERS ===
+
+[src\main.tsx]
+import {StrictMode} from 'react';
+import {createRoot} from 'react-dom/client';
+import App from './App.tsx';
+import './index.css';
+import './i18n';
+import { registerServiceWorker } from './services/serviceWorker';
+import { AppProviders } from './app/index';
+
+registerServiceWorker();
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <AppProviders>
+      <App />
+    </AppProviders>
+  </StrictMode>,
+);
+
+[src\App.tsx]
+import React, { Suspense, lazy, useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { TopBar } from "./components/TopBar";
+import { Navbar } from "./components/Navbar";
+import { ViewType } from "./components/Sidebar";
+import { INITIAL_CAMPAIGNS } from "./data";
+import { Campaign } from "./types";
+import { Database, CheckCircle2, AlertTriangle, Info, AlertOctagon } from "lucide-react";
+import { useOnlineStatus } from "./hooks/useOnlineStatus";
+import { useServiceWorker } from "./hooks/useServiceWorker";
+
+const DashboardPage = lazy(() => import("./pages/Dashboard"));
+const AdsPage = lazy(() => import("./pages/AdsPage"));
+const TemplatesPage = lazy(() => import("./pages/TemplatesPage"));
+const VideoPage = lazy(() => import("./pages/VideoPage"));
+const CaptionPage = lazy(() => import("./pages/CaptionPage"));
+const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage"));
+const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
+const StudioPage = lazy(() => import("./pages/StudioPage"));
+const GalleryPage = lazy(() => import("./pages/GalleryPage"));
+const GrowthPage = lazy(() => import("./pages/GrowthPage"));
+const PremiumPage = lazy(() => import("./pages/PremiumPage"));
+const SupportPage = lazy(() => import("./pages/SupportPage"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const AnimationPage = lazy(() => import("./pages/AnimationPage"));
+
+function PageLoader() {
+  return (
+    <motion.div
+      className="min-h-[360px] flex items-center justify-center"
+      initial={{ opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.35 }}
+    >
+      <motion.div
+        className="rounded-2xl border border-amber-400/20 bg-black/50 px-6 py-5 text-xs font-bold uppercase tracking-[0.22em] text-amber-300 shadow-2xl backdrop-blur-xl"
+        animate={{
+          y: [0, -8, 0],
+          boxShadow: [
+            "0 0 0 rgba(245, 158, 11, 0)",
+            "0 0 35px rgba(245, 158, 11, 0.25)",
+            "0 0 0 rgba(245, 158, 11, 0)"
+          ]
+        }}
+        transition={{
+          duration: 1.6,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      >
+        Loading workspace
+      </motion.div>
+    </motion.div>
+  );
+}
+
+const pageVariants = {
+  initial: { opacity: 0, y: 24, scale: 0.985 },
+  animate: { opacity: 1, y: 0, scale: 1 },
+  exit: { opacity: 0, y: -18, scale: 0.985 }
+};
+
+export default function App() {
+  const isOnline = useOnlineStatus();
+  const { isReady: isOfflineReady } = useServiceWorker();
+  const [activeView, setActiveView] = useState<ViewType>("dashboard");
+  const [campaigns, setCampaigns] = useState<Campaign[]>(INITIAL_CAMPAIGNS);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(true);
+
+  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" | "info" | "warning" } | null>(null);
+  const toastTimerRef = useRef<number | undefined>(undefined);
+
+  const triggerToast = useCallback((msg: string, type: "success" | "error" | "info" | "warning" = "info") => {
+    if (toastTimerRef.current !== undefined) window.clearTimeout(toastTimerRef.current);
+    setToast({ msg, type });
+    toastTimerRef.current = window.setTimeout(() => {
+      setToast(null);
+      toastTimerRef.current = undefined;
+    }, 3500);
+
+[src\ThemeContext.tsx]
+import React, { createContext, useContext, useState, useEffect } from "react";
+
+export interface ThemeConfig {
+  id: string;
+  name: string;
+  icon: string;
+  primary: string;
+  hover: string;
+  gradient: string;
+  btnGradient: string;
+  navbarBorder: string;
+  navbarActiveBg: string;
+  shimmer1: string;
+  shimmer2: string;
+  shimmer3: string;
+  glow: string;
+  btnText: string;
+  bgBody: string;
+  bgElevated: string;
+  bgPanel: string;
+  bgSurface: string;
+  borderSoft: string;
+  textBody: string;
+  textMuted: string;
+  textSubtle: string;
+  fontFamily: string;
+}
+
+export type ThemeMode = "light" | "dark";
+
+function createTheme(
+  id: string,
+  name: string,
+  icon: string,
+  primary: string,
+  secondary: string,
+  accent: string,
+  bgBody: string,
+  bgPanel: string,
+  textBody: string,
+  textMuted: string,
+): ThemeConfig {
+  return {
+    id,
+    name,
+    icon,
+    primary,
+    hover: accent,
+    gradient: `linear-gradient(135deg, ${accent} 0%, ${primary} 48%, ${secondary} 100%)`,
+    btnGradient: `linear-gradient(to right, ${primary}, ${secondary})`,
+    navbarBorder: `${primary}55`,
+    navbarActiveBg: `${primary}22`,
+    shimmer1: accent,
+    shimmer2: primary,
+    shimmer3: secondary,
+    glow: `${primary}66`,
+    btnText: textBody,
+    bgBody,
+    bgElevated: bgPanel,
+    bgPanel,
+    bgSurface: bgBody,
+    borderSoft: `${primary}3d`,
+    textBody,
+    textMuted,
+    textSubtle: textMuted,
+    fontFamily: '"Inter", "Roboto", "Poppins", sans-serif',
+  };
+}
+
+export const THEMES: Record<string, ThemeConfig> = {
+  sunrise: {
+    id: "sunrise",
+    name: "Gold",
+    icon: "G",
+    primary:        "#F8B400",
+    hover:          "#FFCC4D",
+    gradient:       "linear-gradient(135deg, #FFF1A8 0%, #F8B400 45%, #B7791F 100%)",
+    btnGradient:    "linear-gradient(to right, #F8B400, #B7791F)",
+    navbarBorder:   "rgba(248, 180, 0, 0.30)",
+    navbarActiveBg: "rgba(248, 180, 0, 0.13)",
+
+[src\constants\routes.ts]
+export const ROUTES = {
+  home: "/", dashboard: "/dashboard", projects: "/projects", studio: "/studio",
+  templates: "/templates", video: "/video", gallery: "/gallery", growth: "/growth",
+  premium: "/premium", support: "/support", login: "/login", pricing: "/pricing",
+  settings: "/settings",
+} as const;
+
+export type AppRoute = typeof ROUTES[keyof typeof ROUTES];
