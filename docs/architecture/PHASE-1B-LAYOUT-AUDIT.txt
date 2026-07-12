@@ -1,0 +1,57 @@
+﻿PHASE 1B — LAYOUT COMPONENT AUDIT
+Generated: 2026-07-12 03:44:31
+Stage: C:\Users\Aftab khan\BRICKS-MAKER-ADVERTISEMENT-STUDIO\migration-staging\phase-1a-frontend-shell
+
+READ-ONLY AUDIT
+
+============================================================
+FILE: src\components\TopBar.tsx
+============================================================
+SIZE: 20717 bytes
+
+--- IMPORTS ---
+import React, { useState } from "react";
+import { ViewType } from "./Sidebar";
+import brandLogo from "../assets/brick-maker-brand.png";
+import { Sparkles, ShieldCheck, ChevronDown, Check, Rocket, Palette, Video, FileText, TrendingUp, Globe, Zap } from "lucide-react";
+import { useTheme, ThemeConfig } from "../ThemeContext";
+
+--- EXPORTED COMPONENTS ---
+export function TopBar({ activeView, setActiveView }: TopBarProps) {
+
+============================================================
+FILE: src\components\Navbar.tsx
+============================================================
+SIZE: 10202 bytes
+
+--- IMPORTS ---
+import React, { useState } from "react";
+import {
+import { ViewType } from "./Sidebar";
+import { useTheme } from "../ThemeContext";
+import { navbarTools } from "../tools";
+
+--- EXPORTED COMPONENTS ---
+export function Navbar({ activeView, setActiveView }: NavbarProps) {
+
+============================================================
+FILE: src\components\Footer.tsx
+============================================================
+SIZE: 217 bytes
+
+--- IMPORTS ---
+
+--- EXPORTED COMPONENTS ---
+export function Footer() {
+
+============================================================
+FILE: src\components\Sidebar.tsx
+============================================================
+SIZE: 117 bytes
+
+--- IMPORTS ---
+export type { ViewType } from "../types";
+
+--- EXPORTED COMPONENTS ---
+export type { ViewType } from "../types";
+

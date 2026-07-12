@@ -1,0 +1,8 @@
+fastapi<1.0,>=0.116
+uvicorn[standard]<1.0,>=0.35
+pydantic<3.0,>=2.11
+
+[dev]
+pytest
+ruff
+mypy

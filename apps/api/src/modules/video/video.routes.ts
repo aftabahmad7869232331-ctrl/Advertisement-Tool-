@@ -1,7 +1,9 @@
 ﻿import { randomUUID } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+
 import { ProcessingJobModel } from '../../models/ProcessingJob.model.js';
+import { dispatchVideoGeneration } from '../../services/aiWorker.client.js';
 
 const promptSchema = z.union([
   z.string().trim().min(1),
@@ -54,11 +56,45 @@ export async function videoRoutes(app: FastifyInstance): Promise<void> {
       },
     });
 
+    try {
+      await dispatchVideoGeneration({
+        jobId,
+        prompts: promptTexts,
+        format: input.format,
+        quality: input.quality,
+        aspectRatio: input.aspectRatio,
+        language: input.language,
+        provider: 'local-ai-worker',
+        model: 'wan2.1',
+      });
+
+      ProcessingJobModel.updateProgress(
+        jobId,
+        1,
+        'accepted_by_ai_worker',
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'AI worker connection failed';
+
+      ProcessingJobModel.markError(jobId, message);
+
+      return reply.status(503).send({
+        jobId,
+        status: 'error',
+        estimatedTime: 0,
+        progress: 0,
+        error: message,
+      });
+    }
+
     return reply.status(202).send({
       jobId,
       status: 'generating',
       estimatedTime: promptTexts.length * 15,
-      progress: 0,
+      progress: 1,
     });
   });
 
@@ -88,6 +124,7 @@ export async function videoRoutes(app: FastifyInstance): Promise<void> {
             : 'error',
       estimatedTime: 0,
       progress: job.progress,
+      stage: job.stage,
       videoUrl:
         typeof result?.videoUrl === 'string'
           ? result.videoUrl

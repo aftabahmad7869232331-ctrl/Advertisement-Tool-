@@ -1,0 +1,8 @@
+pyproject.toml
+bricks_maker_ai_worker.egg-info/PKG-INFO
+bricks_maker_ai_worker.egg-info/SOURCES.txt
+bricks_maker_ai_worker.egg-info/dependency_links.txt
+bricks_maker_ai_worker.egg-info/requires.txt
+bricks_maker_ai_worker.egg-info/top_level.txt
+src/__init__.py
+src/main.py
