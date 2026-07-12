@@ -1,9 +1,24 @@
-﻿import { randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
 import { ProcessingJobModel } from '../../models/ProcessingJob.model.js';
-import { dispatchVideoGeneration } from '../../services/aiWorker.client.js';
+import {
+  selectAIProvider,
+  type AIProviderName,
+} from '../../services/aiProvider.router.js';
+import {
+  checkAIWorkerHealth,
+  dispatchVideoGeneration,
+} from '../../services/aiWorker.client.js';
+
+const providerSchema = z.enum([
+  'auto',
+  'local-wan',
+  'huggingface',
+  'google',
+  'openai',
+]);
 
 const promptSchema = z.union([
   z.string().trim().min(1),
@@ -20,9 +35,46 @@ const generationRequestSchema = z.object({
   quality: z.enum(['720p', '1080p', '4k']).default('1080p'),
   aspectRatio: z.enum(['16:9', '9:16', '1:1']).default('16:9'),
   language: z.string().trim().min(2).default('en'),
+  provider: providerSchema.optional(),
 });
 
-export async function videoRoutes(app: FastifyInstance): Promise<void> {
+function getConfiguredProvider(): AIProviderName {
+  const parsed = providerSchema.safeParse(
+    process.env.AI_PROVIDER ?? 'auto',
+  );
+
+  return parsed.success ? parsed.data : 'auto';
+}
+
+function getBooleanEnvironmentValue(
+  name: string,
+  defaultValue = false,
+): boolean {
+  const value = process.env[name];
+
+  if (!value) {
+    return defaultValue;
+  }
+
+  return ['1', 'true', 'yes', 'on'].includes(
+    value.trim().toLowerCase(),
+  );
+}
+
+function getNumberEnvironmentValue(
+  name: string,
+  defaultValue = 0,
+): number {
+  const value = Number(process.env[name] ?? defaultValue);
+
+  return Number.isFinite(value)
+    ? value
+    : defaultValue;
+}
+
+export async function videoRoutes(
+  app: FastifyInstance,
+): Promise<void> {
   app.post('/api/video/generate', async (request, reply) => {
     const parsed = generationRequestSchema.safeParse(request.body);
 
@@ -38,25 +90,91 @@ export async function videoRoutes(app: FastifyInstance): Promise<void> {
     const jobId = randomUUID();
 
     const promptTexts = input.prompts.map((prompt) =>
-      typeof prompt === 'string' ? prompt : prompt.text,
+      typeof prompt === 'string'
+        ? prompt
+        : prompt.text,
     );
+
+    const requestedProvider =
+      input.provider ?? getConfiguredProvider();
 
     ProcessingJobModel.create({
       id: jobId,
       jobType: 'video_generation',
       projectId: 'default-project',
-      provider: 'local-ai-worker',
-      model: 'wan2.1',
+      provider: 'pending-selection',
+      model: 'pending-selection',
       payload: {
         prompts: promptTexts,
         format: input.format,
         quality: input.quality,
         aspectRatio: input.aspectRatio,
         language: input.language,
+        requestedProvider,
       },
     });
 
     try {
+      const shouldCheckLocalWorker =
+        requestedProvider === 'auto' ||
+        requestedProvider === 'local-wan';
+
+      const localWorkerAvailable =
+        shouldCheckLocalWorker
+          ? await checkAIWorkerHealth()
+          : false;
+
+      const selection = selectAIProvider({
+        requestedProvider,
+        localWorkerAvailable,
+        allowPaidCloud: getBooleanEnvironmentValue(
+          'ALLOW_PAID_CLOUD',
+          false,
+        ),
+        estimatedCostUsd: getNumberEnvironmentValue(
+          'AI_ESTIMATED_COST_USD',
+          0,
+        ),
+        remainingBudgetUsd: getNumberEnvironmentValue(
+          'AI_REMAINING_BUDGET_USD',
+          0,
+        ),
+      });
+
+      ProcessingJobModel.setProvider(
+        jobId,
+        selection.provider,
+        selection.model,
+      );
+
+      ProcessingJobModel.updateProgress(
+        jobId,
+        1,
+        'provider_selected',
+      );
+
+      /*
+       * Cloud adapters abhi implement nahi hue hain.
+       * Isliye paid request ko silently kisi galat provider par
+       * dispatch nahi karenge.
+       */
+      if (selection.provider !== 'local-wan') {
+        const message =
+          `${selection.provider} provider select hua, ` +
+          'lekin iska generation adapter abhi implement nahi hua.';
+
+        ProcessingJobModel.markError(jobId, message);
+
+        return reply.status(501).send({
+          jobId,
+          status: 'error',
+          progress: 0,
+          provider: selection.provider,
+          model: selection.model,
+          error: message,
+        });
+      }
+
       await dispatchVideoGeneration({
         jobId,
         prompts: promptTexts,
@@ -64,20 +182,29 @@ export async function videoRoutes(app: FastifyInstance): Promise<void> {
         quality: input.quality,
         aspectRatio: input.aspectRatio,
         language: input.language,
-        provider: 'local-ai-worker',
-        model: 'wan2.1',
+        provider: selection.provider,
+        model: selection.model,
       });
 
       ProcessingJobModel.updateProgress(
         jobId,
-        1,
+        2,
         'accepted_by_ai_worker',
       );
+
+      return reply.status(202).send({
+        jobId,
+        status: 'generating',
+        estimatedTime: promptTexts.length * 15,
+        progress: 2,
+        provider: selection.provider,
+        model: selection.model,
+      });
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : 'AI worker connection failed';
+          : 'AI provider selection ya dispatch fail ho gaya.';
 
       ProcessingJobModel.markError(jobId, message);
 
@@ -89,13 +216,6 @@ export async function videoRoutes(app: FastifyInstance): Promise<void> {
         error: message,
       });
     }
-
-    return reply.status(202).send({
-      jobId,
-      status: 'generating',
-      estimatedTime: promptTexts.length * 15,
-      progress: 1,
-    });
   });
 
   app.get<{
@@ -103,7 +223,9 @@ export async function videoRoutes(app: FastifyInstance): Promise<void> {
       jobId: string;
     };
   }>('/api/video/jobs/:jobId', async (request, reply) => {
-    const job = ProcessingJobModel.findById(request.params.jobId);
+    const job = ProcessingJobModel.findById(
+      request.params.jobId,
+    );
 
     if (!job) {
       return reply.status(404).send({
@@ -119,12 +241,15 @@ export async function videoRoutes(app: FastifyInstance): Promise<void> {
       status:
         job.status === 'done'
           ? 'ready'
-          : job.status === 'processing' || job.status === 'pending'
+          : job.status === 'processing' ||
+              job.status === 'pending'
             ? 'generating'
             : 'error',
       estimatedTime: 0,
       progress: job.progress,
       stage: job.stage,
+      provider: job.provider,
+      model: job.model,
       videoUrl:
         typeof result?.videoUrl === 'string'
           ? result.videoUrl

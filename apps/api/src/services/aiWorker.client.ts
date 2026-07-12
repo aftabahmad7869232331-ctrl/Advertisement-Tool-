@@ -1,4 +1,4 @@
-﻿export interface AIVideoGenerationRequest {
+export interface AIVideoGenerationRequest {
   jobId: string;
   prompts: string[];
   format: 'mp4' | 'webm' | 'mov';
@@ -17,8 +17,37 @@ export interface AIWorkerAcceptedResponse {
   model: string;
 }
 
+interface AIWorkerHealthResponse {
+  status: string;
+  service: string;
+  model: string;
+}
+
 const aiWorkerUrl =
   process.env.AI_WORKER_URL ?? 'http://127.0.0.1:8100';
+
+export async function checkAIWorkerHealth(): Promise<boolean> {
+  try {
+    const response = await fetch(`${aiWorkerUrl}/health`, {
+      method: 'GET',
+      signal: AbortSignal.timeout(3_000),
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const data =
+      (await response.json()) as AIWorkerHealthResponse;
+
+    return (
+      data.status === 'ok' &&
+      data.service === 'ai-worker'
+    );
+  } catch {
+    return false;
+  }
+}
 
 export async function dispatchVideoGeneration(
   input: AIVideoGenerationRequest,
