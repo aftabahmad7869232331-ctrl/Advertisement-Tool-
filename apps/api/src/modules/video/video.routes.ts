@@ -8,7 +8,7 @@ import {
   type AIProviderName,
 } from '../../services/aiProvider.router.js';
 import {
-  checkAIWorkerHealth,
+  getAIWorkerHealth,
   dispatchVideoGeneration,
 } from '../../services/aiWorker.client.js';
 
@@ -119,14 +119,27 @@ export async function videoRoutes(
         requestedProvider === 'auto' ||
         requestedProvider === 'local-wan';
 
-      const localWorkerAvailable =
+      const workerHealth =
         shouldCheckLocalWorker
-          ? await checkAIWorkerHealth()
-          : false;
+          ? await getAIWorkerHealth()
+          : null;
+
+      const localWanReady =
+        workerHealth?.localWanReady === true;
+
+      if (
+        requestedProvider === 'local-wan' &&
+        !localWanReady
+      ) {
+        throw new Error(
+          workerHealth?.reason ??
+            'Local Wan2.1 worker available nahi hai.',
+        );
+      }
 
       const selection = selectAIProvider({
         requestedProvider,
-        localWorkerAvailable,
+        localWorkerAvailable: localWanReady,
         allowPaidCloud: getBooleanEnvironmentValue(
           'ALLOW_PAID_CLOUD',
           false,

@@ -17,16 +17,23 @@ export interface AIWorkerAcceptedResponse {
   model: string;
 }
 
-interface AIWorkerHealthResponse {
+export interface AIWorkerHealthResponse {
   status: string;
   service: string;
   model: string;
+  localWanReady: boolean;
+  modelExists: boolean;
+  torchInstalled: boolean;
+  cudaAvailable: boolean;
+  device: string;
+  reason: string;
 }
 
 const aiWorkerUrl =
   process.env.AI_WORKER_URL ?? 'http://127.0.0.1:8100';
 
-export async function checkAIWorkerHealth(): Promise<boolean> {
+export async function getAIWorkerHealth():
+Promise<AIWorkerHealthResponse | null> {
   try {
     const response = await fetch(`${aiWorkerUrl}/health`, {
       method: 'GET',
@@ -34,19 +41,37 @@ export async function checkAIWorkerHealth(): Promise<boolean> {
     });
 
     if (!response.ok) {
-      return false;
+      return null;
     }
 
     const data =
       (await response.json()) as AIWorkerHealthResponse;
 
-    return (
-      data.status === 'ok' &&
-      data.service === 'ai-worker'
-    );
+    if (
+      data.status !== 'ok' ||
+      data.service !== 'ai-worker'
+    ) {
+      return null;
+    }
+
+    return data;
   } catch {
-    return false;
+    return null;
   }
+}
+
+export async function checkAIWorkerHealth():
+Promise<boolean> {
+  const health = await getAIWorkerHealth();
+
+  return health !== null;
+}
+
+export async function checkLocalWanReady():
+Promise<boolean> {
+  const health = await getAIWorkerHealth();
+
+  return health?.localWanReady === true;
 }
 
 export async function dispatchVideoGeneration(

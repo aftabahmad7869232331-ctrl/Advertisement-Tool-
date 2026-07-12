@@ -141,12 +141,59 @@ def run_callback_test(job_id: str) -> None:
             )
 
 
+def detect_local_wan_runtime() -> dict[str, object]:
+    model_path = os.getenv("WAN_MODEL_PATH", "").strip()
+    model_exists = bool(model_path) and os.path.isdir(model_path)
+
+    try:
+        import torch
+
+        cuda_available = torch.cuda.is_available()
+        device = (
+            torch.cuda.get_device_name(0)
+            if cuda_available
+            else "cpu"
+        )
+        torch_installed = True
+    except Exception:
+        cuda_available = False
+        device = "unavailable"
+        torch_installed = False
+
+    local_wan_ready = (
+        model_exists
+        and torch_installed
+        and cuda_available
+    )
+
+    if not model_exists:
+        reason = "WAN_MODEL_PATH configured nahi hai ya model folder nahi mila."
+    elif not torch_installed:
+        reason = "PyTorch runtime installed nahi hai."
+    elif not cuda_available:
+        reason = "CUDA-compatible NVIDIA GPU available nahi hai."
+    else:
+        reason = "Local Wan2.1 runtime ready hai."
+
+    return {
+        "localWanReady": local_wan_ready,
+        "modelExists": model_exists,
+        "torchInstalled": torch_installed,
+        "cudaAvailable": cuda_available,
+        "device": device,
+        "reason": reason,
+    }
+
+
 @app.get("/health")
-def health() -> dict[str, str]:
+def health() -> dict[str, object]:
+    runtime = detect_local_wan_runtime()
+
     return {
         "status": "ok",
         "service": "ai-worker",
-        "model": "wan2.1",
+        "model": "Wan2.1-T2V-1.3B",
+        **runtime,
     }
 
 
