@@ -1,6 +1,8 @@
 ﻿import { useState } from 'react';
 import { HomePage } from './components/home/HomePage';
 import ProjectsPage from './pages/ProjectsPage';
+import StudioPage from './pages/StudioPage';
+import TemplatesPage from './pages/TemplatesPage';
 import { Navbar } from './components/Navbar';
 import { TopBar } from './components/TopBar';
 import { INITIAL_CAMPAIGNS } from './data';
@@ -54,6 +56,32 @@ export function App() {
           />
         ) : activeView === 'projects' ? (
           <ProjectsPage />
+        ) : activeView === 'studio' ? (
+          <StudioPage setActiveView={setActiveView} />
+        ) : activeView === 'flyer' ? (
+          <TemplatesPage
+            campaigns={campaigns}
+            selectedCampaign={null}
+            onSaveCampaign={(campaign) => {
+              setCampaigns((currentCampaigns) => {
+                const existingIndex = currentCampaigns.findIndex(
+                  (item) => item.id === campaign.id,
+                );
+
+                if (existingIndex === -1) {
+                  return [campaign, ...currentCampaigns];
+                }
+
+                return currentCampaigns.map((item) =>
+                  item.id === campaign.id ? campaign : item,
+                );
+              });
+            }}
+            onSelectCampaign={() => undefined}
+            triggerToast={(message) => {
+              console.info(message);
+            }}
+          />
         ) : (
           <section className="app-shell">
             <div className="status-card">
@@ -67,4 +95,6 @@ export function App() {
     </div>
   );
 }
+
+
 
