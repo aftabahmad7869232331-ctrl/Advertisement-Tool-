@@ -1,0 +1,52 @@
+﻿import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { DatabaseSync } from 'node:sqlite';
+
+const currentFile = fileURLToPath(import.meta.url);
+const currentDirectory = path.dirname(currentFile);
+
+const defaultDatabasePath = path.resolve(
+  currentDirectory,
+  '../../storage/video-studio.db',
+);
+
+const databasePath = path.resolve(
+  process.env.SQLITE_DB_PATH ?? defaultDatabasePath,
+);
+
+const schemaPath = path.resolve(currentDirectory, 'schema.sql');
+
+fs.mkdirSync(path.dirname(databasePath), {
+  recursive: true,
+});
+
+export const db = new DatabaseSync(databasePath);
+
+db.exec('PRAGMA journal_mode = WAL;');
+db.exec('PRAGMA foreign_keys = ON;');
+db.exec('PRAGMA busy_timeout = 5000;');
+
+let initialized = false;
+
+export function initializeDatabase(): void {
+  if (initialized) {
+    return;
+  }
+
+  if (!fs.existsSync(schemaPath)) {
+    throw new Error(`Database schema file nahi mila: ${schemaPath}`);
+  }
+
+  const schema = fs.readFileSync(schemaPath, 'utf8');
+
+  db.exec(schema);
+
+  initialized = true;
+
+  console.log(`[database] SQLite ready: ${databasePath}`);
+}
+
+export function closeDatabase(): void {
+  db.close();
+}

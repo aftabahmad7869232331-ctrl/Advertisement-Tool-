@@ -1,6 +1,13 @@
 ﻿import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import { initializeDatabase } from './database/connection.js';
+import { ProcessingJobModel } from './models/ProcessingJob.model.js';
+import { videoRoutes } from './modules/video/video.routes.js';
+
+initializeDatabase();
+
+const orphanedJobs = ProcessingJobModel.reconcileOrphanedJobs();
 
 const app = Fastify({
   logger: true,
@@ -11,11 +18,14 @@ await app.register(cors, {
 });
 
 await app.register(helmet);
+await app.register(videoRoutes);
 
 app.get('/api/health', async () => {
   return {
     status: 'ok',
     service: 'api',
+    database: 'ready',
+    orphanedJobsReconciled: orphanedJobs,
     timestamp: new Date().toISOString(),
   };
 });
