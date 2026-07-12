@@ -1,7 +1,7 @@
 ﻿import { useState } from 'react';
 import { HomePage } from './components/home/HomePage';
 import ProjectsPage from './pages/ProjectsPage';
-import StudioPage from './pages/StudioPage';
+import VideoStudioPage from './features/vfx-studio/pages/VideoStudioPage';
 import TemplatesPage from './pages/TemplatesPage';
 import { Navbar } from './components/Navbar';
 import { TopBar } from './components/TopBar';
@@ -57,7 +57,7 @@ export function App() {
         ) : activeView === 'projects' ? (
           <ProjectsPage />
         ) : activeView === 'studio' ? (
-          <StudioPage setActiveView={setActiveView} />
+          <VideoStudioPage />
         ) : activeView === 'flyer' ? (
           <TemplatesPage
             campaigns={campaigns}
@@ -95,6 +95,7 @@ export function App() {
     </div>
   );
 }
+
 
 
 

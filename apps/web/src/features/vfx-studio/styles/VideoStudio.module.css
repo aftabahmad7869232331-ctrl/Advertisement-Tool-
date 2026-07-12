@@ -1,0 +1,123 @@
+/* ============================================================
+   VIDEO STUDIO MODULE CSS
+   ============================================================ */
+
+.studio {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+  background: var(--vs-bg-primary);
+  color: var(--vs-text-primary);
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+.studioHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--vs-spacing-md) var(--vs-spacing-xl);
+  background: var(--vs-bg-secondary);
+  border-bottom: 1px solid var(--vs-border);
+  position: sticky;
+  top: 0;
+  z-index: var(--vs-z-overlay);
+}
+
+.studioBody {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: var(--vs-spacing-lg);
+  padding: var(--vs-spacing-lg);
+  overflow: hidden;
+}
+
+.sidePanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vs-spacing-md);
+  overflow-y: auto;
+  max-height: calc(100vh - 140px);
+}
+
+.mainPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vs-spacing-md);
+  overflow-y: auto;
+  max-height: calc(100vh - 140px);
+}
+
+.card {
+  background: var(--vs-bg-card);
+  border: 1px solid var(--vs-border);
+  border-radius: var(--vs-radius-lg);
+  padding: var(--vs-spacing-lg);
+  transition: border-color var(--vs-transition-fast);
+}
+
+.card:hover {
+  border-color: var(--vs-border-hover);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--vs-spacing-md);
+}
+
+.cardTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vs-text-primary);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.generateBtn {
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, var(--vs-primary), var(--vs-secondary));
+  color: #fff;
+  border: none;
+  border-radius: var(--vs-radius-md);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--vs-transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.generateBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--vs-shadow-glow);
+}
+
+.generateBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.progressBar {
+  height: 4px;
+  background: var(--vs-bg-elevated);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: var(--vs-spacing-sm);
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--vs-primary), var(--vs-accent));
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+@media (max-width: 900px) {
+  .studioBody {
+    grid-template-columns: 1fr;
+  }
+}

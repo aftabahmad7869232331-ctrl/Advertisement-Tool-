@@ -1,0 +1,75 @@
+/* ============================================================
+   VIDEO STUDIO ANIMATIONS
+   ============================================================ */
+
+@keyframes vs-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes vs-slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes vs-slide-down {
+  from { opacity: 0; transform: translateY(-16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes vs-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes vs-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes vs-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+@keyframes vs-progress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+@keyframes vs-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes vs-glow-pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(99,102,241,0.3); }
+  50%       { box-shadow: 0 0 25px rgba(99,102,241,0.6); }
+}
+
+/* Utility classes */
+.vs-animate-fade-in  { animation: vs-fade-in  var(--vs-transition-normal) both; }
+.vs-animate-slide-up { animation: vs-slide-up var(--vs-transition-normal) both; }
+.vs-animate-scale-in { animation: vs-scale-in var(--vs-transition-fast) both; }
+.vs-animate-spin     { animation: vs-spin 1s linear infinite; }
+.vs-animate-pulse    { animation: vs-pulse 2s ease-in-out infinite; }
+.vs-animate-glow     { animation: vs-glow-pulse 2s ease-in-out infinite; }
+
+.vs-skeleton {
+  background: linear-gradient(90deg, var(--vs-bg-card) 25%, var(--vs-bg-elevated) 50%, var(--vs-bg-card) 75%);
+  background-size: 200% 100%;
+  animation: vs-shimmer 1.5s infinite;
+  border-radius: var(--vs-radius-sm);
+}
+
+/* Stagger delays for lists */
+.vs-stagger > *:nth-child(1)  { animation-delay:   0ms; }
+.vs-stagger > *:nth-child(2)  { animation-delay:  50ms; }
+.vs-stagger > *:nth-child(3)  { animation-delay: 100ms; }
+.vs-stagger > *:nth-child(4)  { animation-delay: 150ms; }
+.vs-stagger > *:nth-child(5)  { animation-delay: 200ms; }
+.vs-stagger > *:nth-child(6)  { animation-delay: 250ms; }
+.vs-stagger > *:nth-child(7)  { animation-delay: 300ms; }
+.vs-stagger > *:nth-child(8)  { animation-delay: 350ms; }
+.vs-stagger > *:nth-child(9)  { animation-delay: 400ms; }
+.vs-stagger > *:nth-child(10) { animation-delay: 450ms; }
