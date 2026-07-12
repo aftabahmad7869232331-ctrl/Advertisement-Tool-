@@ -1,5 +1,6 @@
 ﻿import { useState } from 'react';
 import { HomePage } from './components/home/HomePage';
+import ProjectsPage from './pages/ProjectsPage';
 import { Navbar } from './components/Navbar';
 import { TopBar } from './components/TopBar';
 import { INITIAL_CAMPAIGNS } from './data';
@@ -51,6 +52,8 @@ export function App() {
             onNavigateToCreate={handleNavigateToCreate}
             onToggleStatus={handleToggleStatus}
           />
+        ) : activeView === 'projects' ? (
+          <ProjectsPage />
         ) : (
           <section className="app-shell">
             <div className="status-card">
@@ -64,3 +67,4 @@ export function App() {
     </div>
   );
 }
+
