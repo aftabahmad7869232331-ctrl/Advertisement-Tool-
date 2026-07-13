@@ -47,6 +47,7 @@ export function VideoStudioProvider({ children }: { children: React.ReactNode })
   const [activeTab, setActiveTab] = useState<'prompts' | 'import' | 'template' | 'timeline' | 'titles' | 'vfx' | 'ai-vfx' | 'pro' | 'analytics' | 'publish' | 'settings' | 'regenerate' | 'lipsync' | 'dub' | 'voice' | 'captions' | 'bgremove' | 'watermark' | 'music' | 'export'>('prompts');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const abortRef = useRef<AbortController | null>(null);
+  const activeJobIdRef = useRef<string | null>(null);
 
   const addPrompt = useCallback(() => {
     setProject(prev => {
@@ -112,24 +113,33 @@ export function VideoStudioProvider({ children }: { children: React.ReactNode })
     try {
       const response = await videoGenerationService.generate(request, (progress) => {
         setGenerationProgress(progress);
-      });
+      }, (jobId) => { activeJobIdRef.current = jobId; }, `studio-${project.id}-${Date.now()}`);
       setProject(prev => ({
         ...prev,
         videos: [...prev.videos, {
-          id: response.jobId,
+          id: response.video?.id ?? response.jobId,
           projectId: prev.id,
-          url: response.videoUrl ?? '',
+          url: response.video?.url ?? response.videoUrl ?? '',
           thumbnailUrl: '',
-          duration: 0,
+          duration: response.video?.durationSeconds ?? 0,
           format: request.format,
           quality: request.quality,
           aspectRatio: request.aspectRatio,
-          fileSize: 0,
+          fileSize: response.video?.sizeBytes ?? 0,
           createdAt: new Date(),
           status: 'ready',
           promptIds: request.prompts.map(p => p.id),
+          ...(response.provider ? { provider: response.provider } : {}),
+          ...(response.model ? { model: response.model } : {}),
+          ...(response.video?.mimeType ? { mimeType: response.video.mimeType } : {}),
+          ...(response.video ? {
+            width: response.video.width,
+            height: response.video.height,
+            fps: response.video.fps,
+            codec: response.video.codec,
+          } : {}),
         }],
-        selectedVideoId: response.jobId,
+        selectedVideoId: response.video?.id ?? response.jobId,
         status: 'ready',
         updatedAt: new Date(),
       }));
@@ -140,6 +150,7 @@ export function VideoStudioProvider({ children }: { children: React.ReactNode })
         setGenerationFailedClips(response.failedClips);
       }
       setGenerationStatus('ready');
+      activeJobIdRef.current = null;
     } catch (err) {
       // Pehle error yahan silently swallow ho jaata tha — user ko
       // sirf "error" status dikhta tha, WHY pata nahi chalta tha
@@ -150,6 +161,8 @@ export function VideoStudioProvider({ children }: { children: React.ReactNode })
 
   const cancelGeneration = useCallback(() => {
     abortRef.current?.abort();
+    if (activeJobIdRef.current) void videoGenerationService.cancel(activeJobIdRef.current);
+    activeJobIdRef.current = null;
     setGenerationStatus('idle');
     setGenerationProgress(0);
   }, []);

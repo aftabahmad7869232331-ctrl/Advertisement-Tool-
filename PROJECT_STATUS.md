@@ -613,7 +613,7 @@ openai
 - User-owned key availability
 - Local worker availability
 - Local model availability
-- GPU/runtime availability
+- CPU/runtime availability
 - Paid-cloud permission
 - Estimated job cost
 - Remaining daily/monthly budget
@@ -806,7 +806,7 @@ Migrate module by module rather than copying the old Express backend blindly.
 
 - Read `WAN_MODEL_PATH`
 - Validate model files
-- Detect CUDA/GPU
+- Detect CUDA/CPU
 - Install compatible Torch/Diffusers/runtime
 - Lazy model loading
 - Memory cleanup
@@ -893,7 +893,7 @@ Migrate module by module rather than copying the old Express backend blindly.
 ### Phase J — Deployment
 
 - Web/API/worker deployment
-- GPU worker deployment
+- CPU worker deployment
 - Object storage
 - Managed database migration
 - Queue service
@@ -935,7 +935,7 @@ Load-balanced APIs
 Managed PostgreSQL
 Redis/cloud queue
 Multiple render workers
-Multiple GPU workers
+Multiple CPU workers
 Provider failover
 Central cost controls
 Per-tenant limits
@@ -958,7 +958,7 @@ SQLite is suitable for the current foundation, not the final 10,000-user high-co
 - Confirmation before paid jobs
 - Usage logging
 
-### GPU memory risk
+### CPU memory risk
 
 - Lazy loading
 - Low-resolution default

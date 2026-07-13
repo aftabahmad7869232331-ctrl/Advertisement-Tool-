@@ -6,7 +6,27 @@ Requires-Python: <3.12,>=3.11
 Requires-Dist: fastapi<1.0,>=0.116
 Requires-Dist: uvicorn[standard]<1.0,>=0.35
 Requires-Dist: pydantic<3.0,>=2.11
+Requires-Dist: huggingface_hub<2.0,>=1.7
 Provides-Extra: dev
 Requires-Dist: pytest; extra == "dev"
 Requires-Dist: ruff; extra == "dev"
 Requires-Dist: mypy; extra == "dev"
+Provides-Extra: local-wan
+Requires-Dist: torch<3.0,>=2.4; extra == "local-wan"
+Requires-Dist: torchvision<1.0,>=0.19; extra == "local-wan"
+Requires-Dist: transformers<6.0,>=4.49; extra == "local-wan"
+Requires-Dist: sentencepiece<1.0,>=0.2; extra == "local-wan"
+Requires-Dist: tokenizers<1.0,>=0.21; extra == "local-wan"
+Requires-Dist: safetensors<1.0,>=0.5; extra == "local-wan"
+Requires-Dist: accelerate<2.0,>=1.2; extra == "local-wan"
+Requires-Dist: diffusers<1.0,>=0.32; extra == "local-wan"
+Requires-Dist: numpy<2.0,>=1.26; extra == "local-wan"
+Requires-Dist: pillow<13,>=10; extra == "local-wan"
+Requires-Dist: opencv-python<4.12,>=4.10; extra == "local-wan"
+Requires-Dist: imageio<3.0,>=2.36; extra == "local-wan"
+Requires-Dist: imageio-ffmpeg<1.0,>=0.5; extra == "local-wan"
+Requires-Dist: easydict<2.0,>=1.13; extra == "local-wan"
+Requires-Dist: einops<1.0,>=0.8; extra == "local-wan"
+Requires-Dist: ftfy<7.0,>=6.3; extra == "local-wan"
+Requires-Dist: scipy<2.0,>=1.14; extra == "local-wan"
+Requires-Dist: decord<1.0,>=0.6; python_version < "3.13" and extra == "local-wan"

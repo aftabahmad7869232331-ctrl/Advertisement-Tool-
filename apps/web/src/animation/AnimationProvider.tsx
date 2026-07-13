@@ -20,7 +20,7 @@ interface AnimationEngine {
   duration: (seconds: number) => number;
   repeat: number;
   transition: (seconds?: number, extra?: Transition) => Transition;
-  animate: (value: MotionValue, fallback?: MotionValue) => MotionValue;
+  animate: (value: TargetAndTransition, fallback?: TargetAndTransition) => TargetAndTransition;
   hover: (value: MotionValue) => MotionValue;
   tap: (value: MotionValue) => MotionValue;
 }
@@ -106,7 +106,7 @@ export function AnimationProvider({ children }: { children: React.ReactNode }) {
         ease: [0.22, 1, 0.36, 1],
         ...extra,
       }),
-      animate: (value, fallback) => (enabled && !paused ? value : fallback),
+      animate: (value, fallback = {}) => (enabled && !paused ? value : fallback),
       hover: (value) => (enabled && !paused && intensity >= 0.55 ? value : undefined),
       tap: (value) => (enabled && !paused ? value : undefined),
     };

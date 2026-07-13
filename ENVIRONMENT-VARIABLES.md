@@ -78,7 +78,7 @@ Not allowed:
 - `REDIS_URL`
 - `AI_QUEUE_NAME`
 - `AI_MODEL_PATH`
-- `GPU_ENABLED`
+- `CPU_ENABLED`
 - `CPU_FALLBACK_ENABLED`
 
 ## Secret Handling

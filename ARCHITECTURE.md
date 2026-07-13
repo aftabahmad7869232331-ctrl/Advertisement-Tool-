@@ -102,7 +102,7 @@ Each effect should define:
 - Category
 - Render method
 - Mobile support
-- CPU or GPU requirement
+- CPU or CPU requirement
 - Default settings
 - Preview asset
 - Fallback effect

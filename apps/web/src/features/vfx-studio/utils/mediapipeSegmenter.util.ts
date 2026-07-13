@@ -36,7 +36,7 @@ async function getSegmenter(): Promise<ImageSegmenter> {
       return ImageSegmenter.createFromOptions(fileset, {
         baseOptions: {
           modelAssetPath: MODEL_URL,
-          delegate: 'GPU',
+          delegate: 'CPU',
         },
         runningMode: 'VIDEO',
         outputCategoryMask: false,

@@ -200,16 +200,19 @@ export function TopBar({ activeView, setActiveView }: TopBarProps) {
       {/* ─── MAIN 78PX ENTERPRISE TOPBAR ──────────────────────────────────────── */}
       <header
         id="premium-enterprise-topbar"
-        className="w-full relative bg-[var(--bg-body)] backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 lg:px-8 z-50 animate-topbar-glow-shimmer transition-all duration-300"
+        className="w-full relative bg-[var(--bg-body)] backdrop-blur-2xl flex items-center justify-between gap-2 px-4 sm:px-6 lg:px-10 xl:px-14 2xl:px-16 z-50 animate-topbar-glow-shimmer transition-all duration-300"
         style={{
           height: "78px",
           borderBottom: `1px solid ${activeThemeConfig.navbarBorder}`,
-          boxShadow: "0 4px 30px rgba(0, 0, 0, 0.95), inset 0 1px 0 0 rgba(255, 255, 255, 0.02)"
+          boxShadow: "0 8px 40px rgba(0, 0, 0, 0.95), inset 0 1px 0 0 rgba(255, 255, 255, 0.04), 0 0 0 1px rgba(255, 255, 255, 0.02)"
         }}
       >
-        {/* Soft Golden/Theme Reflection Backdrop Overlay */}
+        {/* Enhanced Soft Golden/Theme Reflection Backdrop Overlay */}
         <div 
-          className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--primary-color)]/2 to-transparent opacity-40 pointer-events-none"
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--primary-color)]/4 to-transparent opacity-50 pointer-events-none"
+          style={{
+            background: "linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--primary-color) 4%, transparent) 50%, transparent 100%)"
+          }}
         />
 
         {/* Tiny Ambient Floating Particles */}
@@ -232,24 +235,24 @@ export function TopBar({ activeView, setActiveView }: TopBarProps) {
           />
         </div>
 
-        {/* ── LEFT SECTION: Brand Logo & Title stack (With 18px horizontal gap) ── */}
-        <div className="flex items-center gap-[18px] min-w-0 relative z-10" id="topbar-left-section">
+        {/* ── LEFT SECTION: Brand Logo & Title stack (With 20px horizontal gap) ── */}
+        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3 lg:gap-5 relative z-10" id="topbar-left-section">
           
-          {/* Logo container with radial background glow */}
+          {/* Logo container with enhanced radial background glow */}
           <div className="relative flex-shrink-0">
-            {/* Very subtle radial glow behind logo */}
+            {/* Enhanced radial glow behind logo with pulsing effect */}
             <div
-              className="absolute inset-0 rounded-full blur-[16px] opacity-40 transition-all duration-500"
+              className="absolute inset-0 rounded-full blur-[20px] opacity-60 transition-all duration-500 animate-pulse-slow"
               style={{
-                background: `radial-gradient(circle, var(--primary-color) 0%, transparent 70%)`
+                background: `radial-gradient(circle, var(--primary-color) 0%, transparent 75%)`
               }}
             />
 
-            {/* Official 52x52 Metallic Logo */}
+            {/* Official 56x56 Metallic Logo with enhanced border and glow */}
             <div
-              className="w-[52px] h-[52px] rounded-xl bg-[#030303] border border-[var(--primary-color)]/30 flex items-center justify-center overflow-hidden shadow-xl logo-glow-pulsing relative group transition-all duration-300"
+              className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl bg-[#030303] border-2 border-[var(--primary-color)]/40 flex items-center justify-center overflow-hidden shadow-2xl logo-glow-pulsing relative group transition-all duration-300 hover:scale-105 hover:border-[var(--primary-color)]/60"
               style={{
-                boxShadow: "inset 0 0 10px rgba(0, 0, 0, 0.9), 0 0 15px rgba(0, 0, 0, 0.5)"
+                boxShadow: "inset 0 0 12px rgba(0, 0, 0, 0.95), 0 0 20px rgba(0, 0, 0, 0.6), 0 0 30px var(--accent-glow)"
               }}
             >
               <img
@@ -262,31 +265,29 @@ export function TopBar({ activeView, setActiveView }: TopBarProps) {
           </div>
 
           {/* Typography Grid Stack */}
-          <div className="flex flex-col text-left justify-center">
-            {/* Brand Title: 26px, weight 800, metallic gradient with soft gold text-shadow glow */}
+          <div className="flex min-w-0 flex-col justify-center text-left">
+            {/* Brand Title: 34px, weight 800, metallic gradient with enhanced glow */}
             <h1
-              className="font-extrabold text-[26px] tracking-tight text-transparent bg-clip-text select-none block leading-none shimmer-active"
+              className="block truncate whitespace-nowrap bg-clip-text text-[17px] font-extrabold leading-none tracking-tight text-transparent select-none shimmer-active sm:text-[22px] lg:text-[34px]"
               style={{
-                textShadow: "0 0 18px rgba(248, 180, 0, 0.35)",
+                textShadow: "0 0 25px rgba(248, 180, 0, 0.5), 0 0 40px rgba(248, 180, 0, 0.3)",
                 backgroundImage: "linear-gradient(135deg, var(--text-shimmer-color1) 0%, var(--text-shimmer-color2) 50%, var(--text-shimmer-color3) 100%)",
+                filter: "drop-shadow(0 0 8px var(--accent-glow))"
               }}
             >
               BRICK-MAKER STUDIO
             </h1>
             
-            {/* Subtitle: 13px, weight 500, #C9C9C9, letter spacing 1.5px */}
+            {/* Subtitle: 16px, weight 600, enhanced color with glow */}
             <span
-              className="text-[13px] font-medium text-[#C9C9C9] tracking-[1.5px] leading-none block mt-1.5"
+              className="mt-1.5 hidden truncate whitespace-nowrap text-[11px] font-semibold leading-none tracking-[1px] text-[#D4D4D4] min-[520px]:block lg:mt-2 lg:text-[16px] lg:tracking-[1.5px]"
+              style={{
+                textShadow: "0 0 10px rgba(255, 255, 255, 0.15)"
+              }}
             >
               All-in-One Creative Business Platform
             </span>
 
-            {/* Tagline: 11px, #8F8F8F, letter spacing 2px */}
-            <span
-              className="text-[11px] text-[#8F8F8F] tracking-[2px] leading-none block mt-1 font-normal"
-            >
-              Design • Create • Promote • Grow
-            </span>
           </div>
 
         </div>
@@ -297,34 +298,34 @@ export function TopBar({ activeView, setActiveView }: TopBarProps) {
         </div>
 
         {/* ── RIGHT SECTION: Actions (Only Theme Dropdown and Admin Button) ──── */}
-        <div className="flex items-center gap-4 relative z-10" id="topbar-right-section">
+        <div className="flex flex-shrink-0 items-center gap-2 lg:gap-4 relative z-10" id="topbar-right-section">
           
-          {/* 1. Theme Button Trigger */}
+          {/* 1. Theme Button Trigger with enhanced styling */}
           <div className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="h-[42px] w-[128px] rounded-[12px] border text-xs font-semibold flex items-center justify-between px-3.5 transition-all duration-300 hover:border-[var(--primary-color)] hover:shadow-[0_0_15px_var(--accent-glow)] relative overflow-hidden group cursor-pointer"
+              className="relative flex h-11 w-11 cursor-pointer items-center justify-center overflow-hidden rounded-xl border px-0 text-[13px] font-bold transition-all duration-300 hover:scale-105 hover:border-[var(--primary-color)] hover:shadow-[0_0_20px_var(--accent-glow),_0_4px_12px_rgba(0,0,0,0.3)] sm:w-[116px] sm:justify-between sm:px-3 lg:h-[46px] lg:w-[140px] lg:rounded-[14px] lg:px-4"
               style={{
                 backgroundColor: "var(--bg-elevated)",
                 borderColor: "var(--border-soft)",
                 color: "var(--text-body)",
-                boxShadow: "inset 0 1px 0 0 rgba(255, 255, 255, 0.05)"
+                boxShadow: "inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 2px 8px rgba(0,0,0,0.2)"
               }}
               aria-label="Choose theme"
             >
-              {/* Glass sheen effect */}
-              <div className="absolute inset-0 bg-white/[0.01] group-hover:bg-white/[0.04] transition-all" />
+              {/* Enhanced glass sheen effect */}
+              <div className="absolute inset-0 bg-white/[0.02] group-hover:bg-white/[0.06] transition-all" />
               
-              <div className="flex items-center gap-2 relative z-10">
+              <div className="flex items-center gap-2.5 relative z-10">
                 <span
-                  className="h-3.5 w-3.5 rounded-full border border-white/30 shadow-[0_0_12px_var(--accent-glow)]"
+                  className="h-4 w-4 rounded-full border-2 border-white/40 shadow-[0_0_15px_var(--accent-glow)] group-hover:scale-110 transition-transform"
                   style={{ background: activeThemeConfig.gradient }}
                 />
-                <span>{activeThemeConfig.name.split(" ")[0]}</span>
+                <span className="hidden tracking-wide sm:inline">{activeThemeConfig.name.split(" ")[0]}</span>
               </div>
               <ChevronDown 
                 size={14} 
-                className={`text-gray-400 group-hover:text-[var(--primary-color)] transition-transform duration-300 relative z-10 ${dropdownOpen ? "rotate-180" : ""}`} 
+                className={`relative z-10 hidden text-gray-400 transition-transform duration-300 group-hover:text-[var(--primary-color)] sm:block ${dropdownOpen ? "rotate-180" : ""}`}
               />
             </button>
 
@@ -380,23 +381,23 @@ export function TopBar({ activeView, setActiveView }: TopBarProps) {
             )}
           </div>
 
-          {/* 2. Admin Button */}
+          {/* 2. Admin Button with enhanced styling */}
           <button
             onClick={() => setActiveView("dashboard")}
-            className="h-[46px] px-[28px] rounded-[12px] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 relative overflow-hidden group cursor-pointer"
+            className="relative flex h-11 w-11 cursor-pointer items-center justify-center gap-2.5 overflow-hidden rounded-xl px-0 text-[13px] font-black uppercase tracking-wider transition-all duration-300 hover:scale-105 sm:w-auto sm:px-4 lg:h-[50px] lg:rounded-[14px] lg:px-8"
             style={{
               background: "var(--primary-btn-gradient)",
               color: "var(--btn-text)",
-              letterSpacing: "1px",
-              boxShadow: "0 4px 20px var(--accent-glow), inset 0 1px 0 0 rgba(255, 255, 255, 0.2)"
+              letterSpacing: "1.2px",
+              boxShadow: "0 6px 24px var(--accent-glow), inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 0 2px 8px rgba(0,0,0,0.3)"
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-2px)";
-              e.currentTarget.style.boxShadow = "0 8px 24px var(--accent-glow)";
+              e.currentTarget.style.transform = "translateY(-3px) scale(1.02)";
+              e.currentTarget.style.boxShadow = "0 10px 30px var(--accent-glow), inset 0 1px 0 0 rgba(255, 255, 255, 0.3), 0 4px 12px rgba(0,0,0,0.4)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 4px 20px var(--accent-glow)";
+              e.currentTarget.style.transform = "translateY(0) scale(1)";
+              e.currentTarget.style.boxShadow = "0 6px 24px var(--accent-glow), inset 0 1px 0 0 rgba(255, 255, 255, 0.25), 0 2px 8px rgba(0,0,0,0.3)";
             }}
           >
             {/* Shimmer reflection highlight moving across admin button */}
@@ -409,7 +410,7 @@ export function TopBar({ activeView, setActiveView }: TopBarProps) {
             />
 
             <ShieldCheck size={15} />
-            <span>Dashboard</span>
+            <span className="hidden sm:inline">Dashboard</span>
           </button>
 
         </div>

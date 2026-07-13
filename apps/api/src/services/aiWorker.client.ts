@@ -7,6 +7,10 @@ export interface AIVideoGenerationRequest {
   language: string;
   provider: string;
   model: string;
+  providerApiKey?: string;
+  duration?: number;
+  seed?: number;
+  negativePrompt?: string;
 }
 
 export interface AIWorkerAcceptedResponse {
@@ -27,6 +31,8 @@ export interface AIWorkerHealthResponse {
   cudaAvailable: boolean;
   device: string;
   reason: string;
+  queueDepth?: number;
+  activeJobs?: number;
 }
 
 const aiWorkerUrl =
@@ -91,17 +97,32 @@ export async function dispatchVideoGeneration(
       language: input.language,
       provider: input.provider,
       model: input.model,
+      provider_api_key: input.providerApiKey,
+      duration: input.duration,
+      seed: input.seed,
+      negative_prompt: input.negativePrompt,
     }),
     signal: AbortSignal.timeout(10_000),
   });
 
   if (!response.ok) {
-    const message = await response.text();
-
     throw new Error(
-      `AI worker request failed (${response.status}): ${message}`,
+      `AI worker request failed (${response.status}).`,
     );
   }
 
   return response.json() as Promise<AIWorkerAcceptedResponse>;
+}
+
+export async function cancelVideoGeneration(jobId: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${aiWorkerUrl}/jobs/${encodeURIComponent(jobId)}/cancel`, {
+      method: 'POST',
+      headers: { 'x-ai-worker-token': process.env.AI_WORKER_CALLBACK_TOKEN ?? 'local-dev-ai-worker' },
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!response.ok) return false;
+    const data = await response.json() as { cancelRequested?: boolean };
+    return data.cancelRequested === true;
+  } catch { return false; }
 }

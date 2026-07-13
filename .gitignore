@@ -1,5 +1,9 @@
-﻿# Dependencies
+# Dependencies
 node_modules/
+storage/generated-videos/
+apps/api/storage/generated-videos/
+Wan2.1-main/
+Wan2.1-main.zip
 .pnpm-store/
 .yarn/
 npm-debug.log*
@@ -20,6 +24,7 @@ coverage/
 # Environment and secrets
 .env
 .env.local
+.env_local
 .env.*.local
 !.env.example
 *.pem

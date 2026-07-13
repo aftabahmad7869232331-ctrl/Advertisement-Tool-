@@ -10,21 +10,29 @@ const API_BASE = VIDEO_STUDIO_CONFIG.api.baseUrl;
 class VideoGenerationService {
   async generate(
     request: VideoGenerationRequest,
-    onProgress?: (percent: number) => void
+    onProgress?: (percent: number) => void,
+    onAccepted?: (jobId: string) => void,
+    idempotencyKey?: string,
   ): Promise<VideoGenerationResponse> {
     const response = await fetch(`${API_BASE}/api/video/generate`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}) },
       body: JSON.stringify(request),
     });
     if (!response.ok) throw new Error(`Generation failed: ${response.statusText}`);
     const data: VideoGenerationResponse = await response.json();
+    if (data.jobId) onAccepted?.(data.jobId);
 
     // Poll for progress
     if (data.jobId) {
       await this.pollJobStatus(data.jobId, onProgress);
     }
     return data;
+  }
+
+  async cancel(jobId: string): Promise<void> {
+    const response = await fetch(`${API_BASE}/api/video/jobs/${jobId}/cancel`, { method: 'POST' });
+    if (!response.ok) throw new Error('Cancellation request failed');
   }
 
   async pollJobStatus(jobId: string, onProgress?: (p: number) => void): Promise<VideoGenerationResponse> {
@@ -42,6 +50,9 @@ class VideoGenerationService {
       onProgress?.(lastProgress);
       if (data.status === 'ready') { onProgress?.(100); return data; }
       if (data.status === 'error') throw new Error(data.error ?? 'Generation error');
+      if (data.status === 'failed' || data.status === 'cancelled' || data.status === 'timed_out') {
+        throw new Error(data.error ?? `Generation ${data.status}`);
+      }
     }
   }
 

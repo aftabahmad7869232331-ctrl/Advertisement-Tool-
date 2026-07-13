@@ -1,0 +1,2 @@
+"""Cloud generation provider adapters."""
+

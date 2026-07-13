@@ -61,7 +61,7 @@ function ProjectCard({
   const isActive = project.status.toLowerCase() === "active";
 
   return (
-    <article className="glass-prism glass-prism-hover rounded-lg p-4 sm:p-5">
+    <article className="glass-prism glass-prism-3d rounded-lg p-4 sm:p-5">
       <div className="mb-3 sm:mb-4 flex items-start justify-between gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--border-soft)] bg-[var(--bg-surface)] text-[var(--primary-color)] sm:h-11 sm:w-11">
           {project.isPrebuilt ? <FileText size={18} /> : <ImageIcon size={18} />}
@@ -101,7 +101,7 @@ export function HomePage({ campaigns, onSelectCampaign, onNavigateToCreate, onTo
 
   return (
     <div
-      className="home-depth-scene relative space-y-16 overflow-hidden text-[var(--text-body)] sm:space-y-20"
+      className="home-depth-scene relative mx-auto w-full max-w-[1920px] space-y-16 overflow-hidden px-4 text-[var(--text-body)] sm:space-y-20 sm:px-6 lg:px-8"
       onPointerMove={(event) => {
         const rect = event.currentTarget.getBoundingClientRect();
         event.currentTarget.style.setProperty("--mouse-x", `${event.clientX - rect.left}px`);
@@ -115,9 +115,9 @@ export function HomePage({ campaigns, onSelectCampaign, onNavigateToCreate, onTo
         }}
       />
 
-      <section className="relative grid min-h-[640px] grid-cols-1 items-center gap-8 py-8 sm:min-h-[700px] sm:py-10 lg:min-h-[calc(100vh-150px)] lg:grid-cols-12 lg:gap-12 lg:py-12 xl:min-h-[760px]" aria-labelledby="hero-heading">
+      <section className="relative grid min-h-[640px] min-w-0 grid-cols-1 items-center gap-8 py-8 sm:min-h-[700px] sm:py-10 lg:min-h-[calc(100vh-182px)] lg:grid-cols-12 lg:gap-12 lg:py-12 xl:min-h-[760px]" aria-labelledby="hero-heading">
         <motion.div
-          className="lg:col-span-6"
+          className="min-w-0 lg:col-span-6"
           initial={{ opacity: 0, y: 22 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45 }}
@@ -127,7 +127,7 @@ export function HomePage({ campaigns, onSelectCampaign, onNavigateToCreate, onTo
             Version 4.0 Platform Release
           </div>
 
-          <h1 id="hero-heading" className="mt-5 max-w-4xl text-[42px] font-black leading-[1.02] text-[var(--text-body)] sm:mt-6 sm:text-5xl md:text-6xl lg:text-[68px] xl:text-[76px]">
+          <h1 id="hero-heading" className="mt-5 max-w-4xl break-words text-[clamp(2.35rem,7.5vw,4.75rem)] font-black leading-[1.02] text-[var(--text-body)] sm:mt-6">
             Build Your Brand.
             <span className="block text-gradient-shimmer">Create Without Limits.</span>
           </h1>
@@ -167,7 +167,7 @@ export function HomePage({ campaigns, onSelectCampaign, onNavigateToCreate, onTo
         </motion.div>
 
         <motion.div
-          className="lg:col-span-6"
+          className="min-w-0 lg:col-span-6"
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.08 }}
@@ -176,12 +176,17 @@ export function HomePage({ campaigns, onSelectCampaign, onNavigateToCreate, onTo
         </motion.div>
       </section>
 
-      <section className="relative overflow-hidden border-y border-[var(--border-soft)] py-6">
+      <section className="relative overflow-hidden border-y border-[var(--border-soft)] py-6 bg-black/10">
         <div className="marquee-track gap-4">
           {[...home.clientLogos, ...home.clientLogos].map((client, index) => (
-            <div key={`${client.name}-${index}`} className="glass-prism-media min-w-56 rounded-lg px-5 py-3">
-              <div className="text-xs font-black uppercase tracking-widest text-[var(--text-body)]">{client.name}</div>
-              <div className="mt-1 text-[10px] text-[var(--text-subtle)]">{client.slogan}</div>
+            <div key={`${client.name}-${index}`} className="glass-prism-media min-w-56 rounded-lg px-5 py-3 flex items-center gap-3">
+              <div className="w-8 h-8 rounded bg-[var(--primary-color)]/10 border border-[var(--primary-color)]/25 flex items-center justify-center text-[var(--primary-color)] flex-shrink-0 shadow-inner">
+                <Layers size={14} />
+              </div>
+              <div>
+                <div className="text-xs font-black uppercase tracking-widest text-[var(--text-body)]">{client.name}</div>
+                <div className="mt-0.5 text-[9px] text-[var(--text-subtle)] leading-tight">{client.slogan}</div>
+              </div>
             </div>
           ))}
         </div>

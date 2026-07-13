@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Campaign, Pamphlet } from "../types";
 import { useGemini } from "../hooks/useGemini";
@@ -911,8 +911,15 @@ export function AdsView({
     </div>
   </div>
 </div>`;
-    navigator.clipboard.writeText(htmlSnippet);
+    const documentHtml = `<!doctype html><html><head><meta charset="utf-8"><title>${headline}</title></head><body style="margin:0;background:#000">${htmlSnippet}</body></html>`;
+    const url = URL.createObjectURL(new Blob([documentHtml], { type: "text/html" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${(businessName || "brick-maker-flyer").replace(/[^a-z0-9._-]+/gi, "-").toLowerCase()}.html`;
+    anchor.click();
+    URL.revokeObjectURL(url);
     setCopiedCode(true);
+    triggerToast?.("HTML flyer downloaded.", "success");
     setTimeout(() => setCopiedCode(false), 3000);
   };
 
@@ -1135,7 +1142,7 @@ export function AdsView({
               <label className="block text-[10px] font-black uppercase text-gray-400 tracking-wider">
                 1. Choose Design Category
               </label>
-              <div className="grid grid-cols-2 gap-2 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
+              <div className="grid grid-cols-2 gap-2 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar">
                 {CATEGORIES.map((cat) => {
                   const isSelected = selectedCategory === cat;
                   return (
@@ -1143,14 +1150,14 @@ export function AdsView({
                       key={cat}
                       type="button"
                       onClick={() => setSelectedCategory(cat)}
-                      className={`p-2.5 rounded-xl border text-left text-[11px] font-bold transition-all duration-300 relative overflow-hidden flex items-center justify-between ${
+                      className={`p-2.5 rounded-xl border text-left text-[11px] font-bold transition-all duration-300 relative overflow-hidden flex items-center justify-between cursor-pointer ${
                         isSelected
                           ? "border-[#F8B400] bg-[#F8B400]/10 text-white shadow-[0_0_12px_rgba(248,180,0,0.1)]"
                           : "border-white/5 bg-white/[0.01] text-gray-400 hover:text-white hover:border-[#F8B400]/30 hover:bg-[#F8B400]/5"
                       }`}
                     >
                       <span className="truncate">{cat}</span>
-                      {isSelected && <span className="w-1 h-1 rounded-full bg-[#F8B400] flex-shrink-0 ml-1" />}
+                      {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#F8B400] flex-shrink-0 ml-1.5 shadow-[0_0_8px_#F8B400]" />}
                     </button>
                   );
                 })}
@@ -1993,14 +2000,40 @@ export function AdsView({
                 </div>
               ) : (
                 /* EMPTY STATE: Professional Design Board */
-                <div className="text-center space-y-4 max-w-sm" id="empty-canvas-state">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/15 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/5">
-                    <FileText size={28} className="text-[#F8B400] animate-pulse" />
+                <div className="w-full max-w-md p-6 rounded-2xl glass-prism flex flex-col items-center text-center space-y-5 animate-scale-in" id="empty-canvas-state">
+                  <div className="relative w-full aspect-[4/3] rounded-xl bg-black/40 border border-white/5 overflow-hidden flex flex-col justify-between p-4 opacity-75">
+                    {/* Mockup Topbar */}
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-[#F8B400]" />
+                        <div className="w-16 h-1.5 rounded bg-white/10" />
+                      </div>
+                      <div className="w-10 h-3 rounded-full border border-white/10 bg-white/5" />
+                    </div>
+                    {/* Mockup Middle */}
+                    <div className="flex-1 flex flex-col justify-center space-y-2.5 my-3">
+                      <div className="h-4 w-3/4 rounded bg-white/15 mx-auto animate-pulse" />
+                      <div className="h-2 w-1/2 rounded bg-white/10 mx-auto" />
+                      <div className="aspect-[21/9] w-full rounded bg-white/5 border border-white/5 flex items-center justify-center">
+                        <ImageIcon size={18} className="text-zinc-700" />
+                      </div>
+                    </div>
+                    {/* Mockup Footer */}
+                    <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                      <div className="space-y-1">
+                        <div className="w-12 h-1 rounded bg-white/10" />
+                        <div className="w-16 h-1 rounded bg-white/5" />
+                      </div>
+                      <div className="w-5 h-5 rounded bg-white/10" />
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <h3 className="text-sm font-bold text-white uppercase tracking-wider">No Design Generated Yet</h3>
-                    <p className="text-xs text-gray-500 leading-relaxed">
-                      Choose a template, enter your business information and generate your professional design board layout.
+                  <div className="space-y-2">
+                    <h3 className="text-base font-black text-white uppercase tracking-wider flex items-center justify-center gap-2">
+                      <Sparkles size={16} className="text-[#F8B400] animate-pulse" />
+                      Design Workspace Ready
+                    </h3>
+                    <p className="text-xs text-[var(--text-muted)] leading-relaxed max-w-sm">
+                      Choose a design category, style template, customize the details in the editor workspace panel, and generate a dynamic architectural flyer layout.
                     </p>
                   </div>
                 </div>
@@ -2023,9 +2056,9 @@ export function AdsView({
                 </button>
                 <button
                   onClick={() => {
-                    const snippet = `Flyer: ${headline} | Theme: ${brandStyle}`;
-                    navigator.clipboard.writeText(snippet);
-                    alert("Share link copied to clipboard!");
+                    const shareText = `Flyer: ${headline} | Theme: ${brandStyle} | ${window.location.href}`;
+                    void navigator.clipboard.writeText(shareText);
+                    triggerToast?.("Flyer details copied for sharing.", "success");
                   }}
                   className="px-3 py-2 rounded-lg bg-zinc-900 border border-white/5 hover:border-white/10 text-zinc-300 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
                   title="Share Project"

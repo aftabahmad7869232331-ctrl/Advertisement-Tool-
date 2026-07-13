@@ -1,0 +1,68 @@
+def detect_local_wan_runtime() -> dict[str, object]:
+    model_path = os.getenv("WAN_MODEL_PATH", "").strip()
+    model_exists = bool(model_path) and os.path.isdir(model_path)
+
+    requested_device = os.getenv("AI_DEVICE", "auto").strip().lower()
+
+    try:
+        import torch
+
+        torch_installed = True
+        cuda_available = torch.cuda.is_available()
+
+        if requested_device == "cpu":
+            device = "cpu"
+        elif requested_device == "cuda":
+            device = (
+                torch.cuda.get_device_name(0)
+                if cuda_available
+                else "cuda-unavailable"
+            )
+        else:
+            device = (
+                torch.cuda.get_device_name(0)
+                if cuda_available
+                else "cpu"
+            )
+
+    except Exception:
+        torch_installed = False
+        cuda_available = False
+        device = "unavailable"
+
+    cpu_mode = device == "cpu"
+
+    local_wan_ready = (
+        model_exists
+        and torch_installed
+        and (
+            cuda_available
+            or cpu_mode
+        )
+    )
+
+    if not model_exists:
+        reason = (
+            "WAN_MODEL_PATH configured nahi hai "
+            "ya model folder nahi mila."
+        )
+    elif not torch_installed:
+        reason = "PyTorch runtime installed nahi hai."
+    elif requested_device == "cuda" and not cuda_available:
+        reason = "CUDA-compatible NVIDIA GPU available nahi hai."
+    elif cpu_mode:
+        reason = (
+            "Local Wan2.1 CPU mode me ready hai. "
+            "Generation bahut slow ho sakti hai."
+        )
+    else:
+        reason = "Local Wan2.1 CUDA runtime ready hai."
+
+    return {
+        "localWanReady": local_wan_ready,
+        "modelExists": model_exists,
+        "torchInstalled": torch_installed,
+        "cudaAvailable": cuda_available,
+        "device": device,
+        "reason": reason,
+    }

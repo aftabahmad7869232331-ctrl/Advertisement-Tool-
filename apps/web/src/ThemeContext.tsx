@@ -184,6 +184,26 @@ function applyTheme(config: ThemeConfig, themeId: string, mode: ThemeMode) {
     "--color-text-muted": config.textMuted,
     "--color-border": config.borderSoft,
     "--font-family": config.fontFamily,
+    /* Video Studio consumes its own token names; keep it on the app theme. */
+    "--vs-primary": config.primary,
+    "--vs-primary-hover": config.hover,
+    "--vs-primary-light": config.shimmer1,
+    "--vs-secondary": config.hover,
+    "--vs-accent": config.shimmer1,
+    "--vs-bg-primary": config.bgBody,
+    "--vs-bg-secondary": config.bgElevated,
+    "--vs-bg-card": config.bgPanel,
+    "--vs-bg-elevated": config.bgSurface,
+    "--vs-bg-hover": config.navbarActiveBg,
+    "--vs-text-primary": config.textBody,
+    "--vs-text-secondary": config.textMuted,
+    "--vs-text-muted": config.textSubtle,
+    "--vs-border": config.borderSoft,
+    "--vs-border-hover": config.primary,
+    "--vs-border-focus": config.primary,
+    "--vs-prompt-bg": config.bgPanel,
+    "--vs-prompt-border": config.borderSoft,
+    "--vs-prompt-active": config.primary,
   };
 
   Object.entries(variables).forEach(([property, value]) => root.style.setProperty(property, value));

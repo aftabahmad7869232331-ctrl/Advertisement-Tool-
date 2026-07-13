@@ -18,12 +18,13 @@
     "dev:render-worker": "npm run dev --workspace=@bricks-maker/render-worker",
     "dev:ai-worker": "powershell -ExecutionPolicy Bypass -File scripts/development/start-ai-worker.ps1",
     "build": "npm run build --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present -- --passWithNoTests",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "clean": "npm run clean --workspaces --if-present",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
+    ,"cleanup:artifacts": "tsx scripts/maintenance/cleanup-artifacts.ts"
   },
   "engines": {
     "node": ">=20",

@@ -153,6 +153,14 @@ export function VideoPreview({ video, onTimeUpdate, captionEntries = [] }: Video
             />
           </div>
         </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px', fontSize: '12px', color: 'var(--vs-text-muted)' }}>
+          {video.provider && <span>Provider: {video.provider}</span>}
+          {video.model && <span>Model: {video.model}</span>}
+          {video.codec && <span>Codec: {video.codec}</span>}
+          {video.width && video.height && <span>{video.width}×{video.height}</span>}
+          {video.fps && <span>{video.fps.toFixed(2)} FPS</span>}
+          <a href={video.url} download style={{ marginLeft: 'auto', color: 'var(--vs-primary)' }}>Download</a>
+        </div>
       </div>
     </div>
   );

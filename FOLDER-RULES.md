@@ -31,7 +31,7 @@ Not allowed:
 - FFmpeg processing
 - Database credentials
 - Server-only secrets
-- GPU worker code
+- CPU worker code
 
 ### apps/api
 Contains the main backend API.
@@ -82,7 +82,7 @@ Allowed:
 - Model loading
 - Prompt execution
 - AI job progress
-- GPU or CPU fallback
+- CPU or CPU fallback
 
 ## packages
 

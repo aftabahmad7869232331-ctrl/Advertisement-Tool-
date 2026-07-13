@@ -42,6 +42,19 @@ export function initializeDatabase(): void {
 
   db.exec(schema);
 
+  const columns = db.prepare('PRAGMA table_info(videos)').all() as Array<{ name: string }>;
+  const existing = new Set(columns.map((column) => column.name));
+  const additions = [
+    ['storage_provider', 'TEXT'],
+    ['sha256', 'TEXT'],
+    ['file_size_bytes', 'INTEGER'],
+    ['duration_seconds', 'REAL'],
+  ] as const;
+  for (const [name, type] of additions) {
+    if (!existing.has(name)) db.exec(`ALTER TABLE videos ADD COLUMN ${name} ${type}`);
+  }
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_videos_unique_job ON videos(job_id) WHERE job_id IS NOT NULL;');
+
   initialized = true;
 
   console.log(`[database] SQLite ready: ${databasePath}`);

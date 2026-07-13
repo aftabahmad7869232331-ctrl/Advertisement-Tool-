@@ -69,6 +69,8 @@ CREATE TABLE IF NOT EXISTS videos (
 
   url                TEXT NOT NULL,
   storage_key        TEXT,
+  storage_provider   TEXT,
+  sha256              TEXT,
   thumbnail_url      TEXT,
 
   duration           REAL NOT NULL DEFAULT 0,
@@ -83,6 +85,8 @@ CREATE TABLE IF NOT EXISTS videos (
   quality            TEXT NOT NULL DEFAULT '1080p',
   aspect_ratio       TEXT NOT NULL DEFAULT '16:9',
   file_size          INTEGER NOT NULL DEFAULT 0,
+  file_size_bytes    INTEGER,
+  duration_seconds   REAL,
 
   language           TEXT NOT NULL DEFAULT 'en',
   status             TEXT NOT NULL DEFAULT 'queued',
@@ -115,3 +119,39 @@ ON videos(user_id, created_at);
 
 CREATE INDEX IF NOT EXISTS idx_videos_status
 ON videos(status);
+
+CREATE TABLE IF NOT EXISTS ai_usage_events (
+  job_id TEXT PRIMARY KEY REFERENCES processing_jobs(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL, model TEXT NOT NULL, credential_source TEXT NOT NULL,
+  estimated_cost_usd REAL, actual_cost_usd REAL, duration_requested REAL NOT NULL,
+  status TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS idempotency_keys (
+  client_scope TEXT NOT NULL, idempotency_key TEXT NOT NULL, request_hash TEXT NOT NULL,
+  job_id TEXT NOT NULL REFERENCES processing_jobs(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (client_scope, idempotency_key)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_videos_unique_job
+ON videos(job_id) WHERE job_id IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS workspace_records (
+  collection TEXT NOT NULL,
+  id TEXT NOT NULL,
+  data_json TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (collection, id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_workspace_records_updated
+ON workspace_records(collection, updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS workspace_actions (
+  id TEXT PRIMARY KEY,
+  page TEXT NOT NULL,
+  action TEXT NOT NULL,
+  payload_json TEXT NOT NULL DEFAULT '{}',
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

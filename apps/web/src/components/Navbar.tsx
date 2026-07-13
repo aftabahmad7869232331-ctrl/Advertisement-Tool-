@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { 
   Menu, 
   X, 
@@ -70,25 +70,82 @@ export function Navbar({ activeView, setActiveView }: NavbarProps) {
       {/* ─── MAIN NAVBAR CONTAINER (64px) ────────────────────────────────────── */}
       <nav
         id="premium-luxury-navbar"
-        className="w-full sticky top-0 z-40 backdrop-blur-md flex items-center justify-center px-4 sm:px-6 lg:px-8 transition-all duration-300 select-none"
+        className="relative z-40 flex w-full items-center justify-between overflow-x-clip px-4 md:px-8 backdrop-blur-xl transition-all duration-300 select-none"
         style={{
           height: "64px",
-          backgroundColor: "color-mix(in srgb, var(--bg-elevated) 94%, transparent)",
+          backgroundColor: "color-mix(in srgb, var(--bg-elevated) 45%, transparent)",
           borderBottom: "1px solid var(--navbar-border)",
-          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.95), 0 0 18px var(--accent-glow)"
+          boxShadow: "0 12px 35px rgba(0, 0, 0, 0.95), 0 0 20px var(--accent-glow), inset 0 1px 0 0 rgba(255, 255, 255, 0.03)"
         }}
       >
-        {/* Soft Theme Glow at the bottom of navbar */}
+        {/* Enhanced Soft Theme Glow at the bottom of navbar */}
         <div 
-          className="absolute inset-x-0 bottom-0 h-[8px] bg-gradient-to-t from-[var(--primary-color)]/5 to-transparent pointer-events-none"
+          className="absolute inset-x-0 bottom-0 h-[10px] bg-gradient-to-t from-[var(--primary-color)]/8 to-transparent pointer-events-none"
+          style={{
+            background: "linear-gradient(to top, color-mix(in srgb, var(--primary-color) 8%, transparent) 0%, transparent 100%)"
+          }}
         />
 
-        {/* Desktop Menu - Centered horizontal navigation with perfect spacing */}
-        <div className="hidden md:flex items-center justify-center w-full max-w-none h-full gap-2.5 overflow-visible">
-          {navItems.map((item, idx) => {
+        {/* Left Side: Brand Logo */}
+        <div className="hidden xl:flex items-center gap-3 h-full">
+          <span className="text-[18px] font-black tracking-widest text-transparent bg-clip-text bg-[image:var(--primary-gradient)]">
+            BRICK-MAKER
+          </span>
+          <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest px-2.5 py-0.5 rounded bg-white/5 border border-white/5">
+            Studio
+          </span>
+        </div>
+
+        {/* Center: Primary Navigation Links */}
+        <div className="hidden xl:flex items-center justify-center gap-1.5 h-full overflow-visible">
+          {navItems.filter(item => ["Home", "Projects", "Studio", "Templates", "Video", "Gallery"].includes(item.label)).map((item, idx) => {
+            const isCurrentlyActive = activeView === item.view;
+            return (
+              <button
+                key={idx}
+                onClick={() => setActiveView(item.view)}
+                className={`flex flex-shrink-0 items-center gap-2 px-4 py-2.5 rounded-[12px] border border-[var(--border-soft)] bg-[var(--bg-panel)]/40 text-[14px] font-bold tracking-[0.2px] transition-all duration-300 relative group cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ${
+                  isCurrentlyActive
+                    ? "bg-[var(--navbar-active-bg)]"
+                    : "text-[var(--text-muted)] hover:text-[var(--primary-color)] hover:bg-[var(--navbar-active-bg)] hover:border-[var(--primary-color)]/30 hover:shadow-[0_0_15px_var(--accent-glow)] hover:scale-105"
+                } underline-hover-effect`}
+                style={{
+                  backgroundColor: isCurrentlyActive ? "var(--navbar-active-bg)" : undefined,
+                  boxShadow: isCurrentlyActive ? "inset 0 0 10px var(--accent-glow), 0 0 12px var(--accent-glow)" : undefined
+                }}
+              >
+                <span className="transform group-hover:scale-115 transition-transform duration-300 text-[var(--primary-color)]">
+                  {item.icon}
+                </span>
+                <span 
+                  className="transition-colors duration-300"
+                  style={{
+                    backgroundImage: isCurrentlyActive ? "var(--primary-gradient)" : "none",
+                    WebkitBackgroundClip: isCurrentlyActive ? "text" : "unset",
+                    WebkitTextFillColor: isCurrentlyActive ? "transparent" : "unset"
+                  }}
+                >
+                  {item.label}
+                </span>
+                {isCurrentlyActive && (
+                  <span 
+                    className="absolute bottom-1 left-[15%] right-[15%] h-[2.5px] rounded-full"
+                    style={{
+                      background: "var(--primary-color)",
+                      boxShadow: "0 0 10px var(--primary-color)"
+                    }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right Side: Utilities / Controls */}
+        <div className="hidden xl:flex items-center gap-2 h-full overflow-visible">
+          {navItems.filter(item => !["Home", "Projects", "Studio", "Templates", "Video", "Gallery"].includes(item.label)).map((item, idx) => {
             const isCustomAction = !!item.action;
             const isCurrentlyActive = !isCustomAction && activeView === item.view;
-            
             return (
               <button
                 key={idx}
@@ -99,59 +156,28 @@ export function Navbar({ activeView, setActiveView }: NavbarProps) {
                     setActiveView(item.view);
                   }
                 }}
-                className={`flex flex-shrink-0 items-center gap-2 px-4 py-2.5 rounded-[14px] border border-[var(--border-soft)] bg-[var(--bg-panel)]/55 text-[15px] font-bold tracking-[0.2px] transition-all duration-300 relative group cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ${
+                className={`flex flex-shrink-0 items-center gap-1.5 px-3 py-2 rounded-[10px] border border-white/5 bg-white/[0.01] text-[13px] font-medium transition-all duration-300 relative group cursor-pointer ${
                   isCurrentlyActive
-                    ? "bg-[var(--navbar-active-bg)]"
-                    : "text-[var(--text-muted)] hover:text-[var(--primary-color)] hover:bg-[var(--navbar-active-bg)] hover:border-[var(--primary-color)]/45 hover:shadow-[0_0_15px_var(--accent-glow)]"
-                } underline-hover-effect`}
-                style={{
-                  // Overwrite background and text dynamically for active/theme coherence
-                  backgroundColor: isCurrentlyActive ? "var(--navbar-active-bg)" : undefined,
-                  boxShadow: isCurrentlyActive ? "inset 0 0 8px var(--accent-glow), 0 0 10px var(--accent-glow)" : undefined
-                }}
+                    ? "bg-[var(--navbar-active-bg)] border-[var(--primary-color)]/30 text-[var(--primary-color)]"
+                    : "text-[var(--text-subtle)] hover:text-[var(--primary-color)] hover:bg-[var(--bg-panel)]/50 hover:border-[var(--primary-color)]/20"
+                }`}
               >
-                {/* Icon wrapper - scales up slightly on hover */}
-                <span className="transform group-hover:scale-110 transition-transform duration-300 text-[var(--primary-color)]">
+                <span className="text-[var(--primary-color)] opacity-80 group-hover:opacity-100 transition-opacity">
                   {item.icon}
                 </span>
-
-                {/* Text Label - Golden gradient if active, otherwise #EAEAEA */}
-                <span 
-                  className={`transition-colors duration-300`}
-                  style={{
-                    backgroundImage: isCurrentlyActive ? "var(--primary-gradient)" : "none",
-                    WebkitBackgroundClip: isCurrentlyActive ? "text" : "unset",
-                    WebkitTextFillColor: isCurrentlyActive ? "transparent" : "unset"
-                  }}
-                >
-                  {item.label}
-                </span>
-
-                {/* 2px glowing golden underline for Active item */}
-                {isCurrentlyActive && (
-                  <span 
-                    className="absolute bottom-1 left-[15%] right-[15%] h-[2px] rounded-full"
-                    style={{
-                      background: "var(--primary-color)",
-                      boxShadow: "0 0 10px var(--primary-color)"
-                    }}
-                  />
-                )}
-
-                {/* Subtle glass highlight reflection inside hover button */}
-                <span className="absolute inset-0 rounded-[12px] bg-white/[0.01] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                <span>{item.label}</span>
               </button>
             );
           })}
         </div>
 
         {/* Mobile View Header - Hamburger icon & Brand Trigger */}
-        <div className="flex md:hidden items-center justify-between w-full relative z-50">
+        <div className="flex xl:hidden items-center justify-between w-full relative z-50">
           <div className="flex items-center gap-2">
-            <span className="text-[15px] font-black tracking-widest text-transparent bg-clip-text bg-[image:var(--primary-gradient)]">
+            <span className="text-[17px] font-black tracking-widest text-transparent bg-clip-text bg-[image:var(--primary-gradient)]">
               BRICK-MAKER
             </span>
-            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-white/5 border border-white/5">
+            <span className="text-[11px] text-gray-500 font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-white/5 border border-white/5">
               Suite
             </span>
           </div>
@@ -167,7 +193,7 @@ export function Navbar({ activeView, setActiveView }: NavbarProps) {
         {/* ── Mobile Menu Dropdown Panel (Slide down glass black) ──────────────── */}
         {mobileMenuOpen && (
           <div 
-            className="absolute top-[64px] left-0 w-full bg-[var(--bg-elevated)]/98 backdrop-blur-2xl border-b border-[var(--primary-color)]/30 py-4 px-6 flex flex-col gap-2.5 md:hidden z-40 shadow-2xl animate-fade-in"
+            className="absolute top-[64px] left-0 w-full bg-[var(--bg-elevated)]/98 backdrop-blur-2xl border-b border-[var(--primary-color)]/30 py-4 px-6 flex flex-col gap-2.5 xl:hidden z-40 shadow-2xl animate-fade-in"
             style={{
               boxShadow: "0 20px 40px rgba(0, 0, 0, 0.95)"
             }}
@@ -187,7 +213,7 @@ export function Navbar({ activeView, setActiveView }: NavbarProps) {
                     }
                     setMobileMenuOpen(false);
                   }}
-                  className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-left text-sm font-semibold transition-all duration-200"
+                  className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-left text-[15px] font-semibold transition-all duration-200"
                   style={{
                     backgroundColor: isCurrentlyActive ? "var(--navbar-active-bg)" : "transparent",
                     color: isCurrentlyActive ? "var(--primary-color)" : "var(--text-muted)",
@@ -230,4 +256,3 @@ export function Navbar({ activeView, setActiveView }: NavbarProps) {
     </>
   );
 }
-

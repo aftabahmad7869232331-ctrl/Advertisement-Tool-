@@ -5,4 +5,14 @@ bricks_maker_ai_worker.egg-info/dependency_links.txt
 bricks_maker_ai_worker.egg-info/requires.txt
 bricks_maker_ai_worker.egg-info/top_level.txt
 src/__init__.py
+src/cleanup.py
 src/main.py
+src/providers/__init__.py
+src/providers/base.py
+src/providers/huggingface_provider.py
+src/providers/provider_registry.py
+src/queue/__init__.py
+src/queue/job_queue.py
+tests/test_huggingface_provider.py
+tests/test_job_queue.py
+tests/test_worker_generation.py

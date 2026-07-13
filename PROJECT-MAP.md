@@ -41,7 +41,7 @@ Must not contain:
 - Direct AI model execution
 - FFmpeg render jobs
 - Database credentials
-- GPU management
+- CPU management
 
 ### apps/api
 
@@ -56,7 +56,7 @@ Responsible for:
 - Admin APIs
 - Storage coordination
 
-Must not perform long-running GPU rendering directly.
+Must not perform long-running CPU rendering directly.
 
 ### apps/render-worker
 
@@ -76,7 +76,7 @@ Responsible for:
 - Six-second segment generation
 - AI job progress
 - Model loading
-- GPU and CPU fallback logic
+- CPU and CPU fallback logic
 
 ## Shared Packages
 

@@ -2,7 +2,7 @@
 // VIDEO TYPES - Frontend
 // ============================================================
 
-export type VideoStatus = 'idle' | 'generating' | 'processing' | 'ready' | 'error';
+export type VideoStatus = 'idle' | 'queued' | 'generating' | 'processing' | 'retrying' | 'ready' | 'failed' | 'cancelled' | 'timed_out' | 'error';
 export type VideoFormat = 'mp4' | 'webm' | 'mov' | 'avi' | 'mkv';
 export type VideoQuality = '360p' | '480p' | '720p' | '1080p' | '4k';
 export type VideoAspectRatio = '16:9' | '9:16' | '1:1' | '4:3' | '21:9';
@@ -31,6 +31,13 @@ export interface GeneratedVideo {
   createdAt: Date;
   status: VideoStatus;
   promptIds: string[];
+  provider?: string;
+  model?: string;
+  mimeType?: string;
+  width?: number | null;
+  height?: number | null;
+  fps?: number | null;
+  codec?: string | null;
 }
 
 export interface VideoProject {
@@ -66,6 +73,19 @@ export interface VideoGenerationResponse {
   videoUrl?: string;
   error?: string;
   progress?: number;
+  provider?: string;
+  model?: string;
+  video?: {
+    id: string;
+    url: string;
+    mimeType: string;
+    sizeBytes: number;
+    durationSeconds: number | null;
+    width: number | null;
+    height: number | null;
+    fps: number | null;
+    codec: string | null;
+  };
   /** Level 2 Phase B2: retries ke baad bhi fail hui clips (agar koi hui to) */
   failedClips?: { index: number; prompt: string; error: string }[];
 }

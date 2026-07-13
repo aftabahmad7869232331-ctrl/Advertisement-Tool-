@@ -26,6 +26,7 @@ import { ImportVideoPanel } from './ImportVideoPanel';
 import { SettingsPanel } from './SettingsPanel';
 import { VoiceLab } from './VoiceLab';
 import { CaptionEditor } from './CaptionEditor';
+import { workspaceApi } from '../../../../services/workspaceApi';
 import { Navbar } from './Navbar';
 import { Tabs } from '../Common/Tabs';
 import { useVideoStudio } from '../../hooks/useVideoStudio';
@@ -34,8 +35,23 @@ import '../../styles/videoStudio.variables.css';
 import '../../styles/animations.css';
 
 function VideoStudioInner() {
-  const { activeTab, setActiveTab, startGeneration, canGenerate, generationStatus, generationProgress, generationError, generationFailedClips, validPromptCount, activeTemplate, project } = useVideoStudio();
+  const { activeTab, setActiveTab, startGeneration, canGenerate, generationStatus, generationProgress, generationError, generationFailedClips, validPromptCount, activeTemplate, project, setProject } = useVideoStudio();
   const selectedVideo = project.videos.find(v => v.id === project.selectedVideoId) ?? project.videos[project.videos.length - 1];
+
+  const applyOutput = (operation: string, url: string) => {
+    if (selectedVideo) {
+      setProject({
+        ...project,
+        videos: project.videos.map((video) => video.id === selectedVideo.id ? { ...video, url, status: 'ready' } : video),
+        selectedVideoId: selectedVideo.id,
+        updatedAt: new Date(),
+      });
+    }
+    void workspaceApi.action('video-studio', `${operation}-completed`, {
+      videoId: selectedVideo?.id ?? null,
+      outputUrl: url,
+    });
+  };
 
   const sideTabs = [
     { id: 'prompts',    label: 'Prompts',    icon: '📝', badge: validPromptCount },
@@ -90,29 +106,29 @@ function VideoStudioInner() {
               <TitlesPanel
                 videoId={selectedVideo?.id ?? null}
                 videoDuration={selectedVideo?.duration ?? 10}
-                onApplied={url => console.log('Titles applied:', url)}
+                onApplied={url => applyOutput('titles', url)}
               />
             )}
             {activeTab === 'vfx'       && (
               <VFXPanel
                 videoId={selectedVideo?.id ?? null}
-                onApplied={url => console.log('VFX applied:', url)}
+                onApplied={url => applyOutput('vfx', url)}
               />
             )}
             {activeTab === 'ai-vfx'   && (
               <AIVFXPanel
                 videoId={selectedVideo?.id ?? null}
                 mainScript={project.prompts.map(p => p.text).join(' ')}
-                onBRollReady={clips => console.log('B-roll ready:', clips)}
-                onStyleDone={url  => console.log('Style done:', url)}
-                onBGDone={url     => console.log('BG done:', url)}
+                onBRollReady={clips => { void workspaceApi.action('video-studio', 'b-roll-ready', { clips }); }}
+                onStyleDone={url => applyOutput('style-transfer', url)}
+                onBGDone={url => applyOutput('background', url)}
               />
             )}
             {activeTab === 'pro'      && (
               <ProStudioPanel
                 videoId={selectedVideo?.id ?? null}
                 videoIds={project.videos.map(v => v.id)}
-                onDone={url => console.log('Pro done:', url)}
+                onDone={url => applyOutput('pro-studio', url)}
               />
             )}
             {activeTab === 'analytics' && <AnalyticsDashboard />}
@@ -125,18 +141,18 @@ function VideoStudioInner() {
               />
             )}
             {activeTab === 'settings'  && <SettingsPanel />}
-            {activeTab === 'regenerate' && <VideoDropzone onRegenerated={url => console.log('Regenerated:', url)} />}
+            {activeTab === 'regenerate' && <VideoDropzone onRegenerated={url => applyOutput('regenerate', url)} />}
             {activeTab === 'lipsync'    && (
               <LipSyncPanel
                 currentVideoId={selectedVideo?.id ?? null}
                 currentAudioId={null}
-                onSyncComplete={url => console.log('Lip synced:', url)}
+                onSyncComplete={url => applyOutput('lip-sync', url)}
               />
             )}
             {activeTab === 'dub'        && (
               <AutoDubPanel
                 videoId={selectedVideo?.id ?? null}
-                onDubComplete={url => console.log('Dubbed:', url)}
+                onDubComplete={url => applyOutput('auto-dub', url)}
               />
             )}
             {activeTab === 'voice'      && <VoiceLab />}
@@ -145,13 +161,13 @@ function VideoStudioInner() {
             {activeTab === 'watermark' && (
               <WatermarkPanel
                 videoId={selectedVideo?.id ?? null}
-                onWatermarkApplied={(url, id) => console.log('Watermarked:', url, id)}
+                onWatermarkApplied={(url) => applyOutput('watermark', url)}
               />
             )}
             {activeTab === 'music' && (
               <MusicPanel
                 videoId={selectedVideo?.id ?? null}
-                onMusicApplied={(url, id) => console.log('Music applied:', url, id)}
+                onMusicApplied={(url) => applyOutput('music', url)}
               />
             )}
             {activeTab === 'export'    && <ExportPanel />}
@@ -189,6 +205,8 @@ function VideoStudioInner() {
           >
             {generationStatus === 'generating'
               ? `⚡ Generating... ${Math.round(generationProgress)}%`
+              : generationStatus === 'error'
+                ? '↻ Retry Generation'
               : activeTemplate
                 ? `🚀 Generate ${activeTemplate.name} Video`
                 : '🚀 Generate Video'}
