@@ -11,6 +11,7 @@ import type { VoiceLabState } from '../types/voice.types';
 import type { CaptionEditorState } from '../types/caption.types';
 import { videoGenerationService } from '../services/videoGeneration.service';
 import { videoExportService } from '../services/videoExport.service';
+import { authenticatedFetch } from '../../../services/auth';
 
 let promptCounter = 0;
 
@@ -137,6 +138,9 @@ export function VideoStudioProvider({ children }: { children: React.ReactNode })
             height: response.video.height,
             fps: response.video.fps,
             codec: response.video.codec,
+            ...(response.video.temporary !== undefined ? { temporary: response.video.temporary } : {}),
+            ...(response.video.expiresAt ? { expiresAt: response.video.expiresAt } : {}),
+            ...(response.video.savedAt ? { savedAt: response.video.savedAt } : {}),
           } : {}),
         }],
         selectedVideoId: response.video?.id ?? response.jobId,
@@ -172,14 +176,10 @@ export function VideoStudioProvider({ children }: { children: React.ReactNode })
     if (!project.id || project.status === 'generating') return;
     const timer = setInterval(async () => {
       try {
-        await fetch(`${import.meta.env.VITE_API_URL || ''}/api/settings/versions/save`, {
-          method: 'POST',
+        await authenticatedFetch(`${import.meta.env.VITE_API_URL || ''}/api/workspace/projects/${encodeURIComponent(project.id)}`, {
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            projectId: project.id,
-            label: `Auto-save ${new Date().toLocaleTimeString('hi-IN')}`,
-            snapshot: project,
-          }),
+          body: JSON.stringify({ ...project, autoSavedAt: new Date().toISOString() }),
         });
       } catch { /* non-fatal */ }
     }, 2 * 60 * 1000); // every 2 min
@@ -189,6 +189,7 @@ export function VideoStudioProvider({ children }: { children: React.ReactNode })
     id: string; url: string; thumbnailUrl: string;
     duration: number; format: string; quality: string;
     aspectRatio: string; fileSize: number; filename: string;
+    temporary?: boolean; expiresAt?: string;
   }) => {
     setProject(prev => ({
       ...prev,
@@ -206,6 +207,8 @@ export function VideoStudioProvider({ children }: { children: React.ReactNode })
         status:       'ready',
         promptIds:    [],
         label:        videoData.filename,
+        ...(videoData.temporary !== undefined ? { temporary: videoData.temporary } : {}),
+        ...(videoData.expiresAt ? { expiresAt: videoData.expiresAt } : {}),
       }],
       selectedVideoId: videoData.id,
       updatedAt: new Date(),

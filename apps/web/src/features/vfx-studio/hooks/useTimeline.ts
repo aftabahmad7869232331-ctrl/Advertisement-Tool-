@@ -4,6 +4,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import type { TimelineClip, TransitionType, ClipFilter, SpeedPreset, GeneratedVideo } from '../types/video.types';
+import { authenticatedFetch } from '../../../services/auth';
 
 let _clipIdCounter = 0;
 function newClipId() { return `clip-${Date.now()}-${++_clipIdCounter}`; }
@@ -110,7 +111,7 @@ export function useTimeline() {
 
     try {
       const API_BASE = import.meta.env.VITE_API_URL || '';
-      const res = await fetch(`${API_BASE}/api/timeline/render`, {
+      const res = await authenticatedFetch(`${API_BASE}/api/timeline/render`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ clips: recomputed, format, quality, aspectRatio: '16:9', fps: 30 }),
@@ -122,7 +123,7 @@ export function useTimeline() {
       const deadline = Date.now() + 15 * 60 * 1000;
       while (Date.now() < deadline) {
         await new Promise(r => setTimeout(r, 3000));
-        const poll = await fetch(`${API_BASE}/api/timeline/${jobId}/status`);
+        const poll = await authenticatedFetch(`${API_BASE}/api/timeline/${jobId}/status`);
         const data = await poll.json();
         setRenderProgress(data.progress);
         setRenderStep(data.step || '');

@@ -11,6 +11,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useVideoStudioContext } from '../../context/VideoStudioContext';
 import { LanguageSelector } from './LanguageSelector';
+import AuthService from '../../../../services/auth';
 
 interface NavbarProps {
   onOpenSettings?: () => void;
@@ -18,21 +19,11 @@ interface NavbarProps {
 
 export function Navbar({ onOpenSettings }: NavbarProps) {
   const { activeTab, setActiveTab, generationStatus, generationProgress } = useVideoStudioContext();
-  type StudioUser = {
-    photoURL?: string | null;
-    email?: string | null;
-  };
-
-  const getStudioUser = (): StudioUser | null => null;
-  const user = getStudioUser();
-
-  const authEnabled = Boolean(
-    import.meta.env.VITE_VFX_AUTH_ENABLED
-  );
-
-  const signOutUser = async (): Promise<void> => {
-    return Promise.resolve();
-  };
+  const user = AuthService.getCurrentUser();
+  const [runtime, setRuntime] = useState<{
+    cpuReady: boolean; gpuReachable: boolean; localWanReady: boolean;
+    queueDepth: number | null; activeJobs: number | null;
+  }>({ cpuReady: false, gpuReachable: false, localWanReady: false, queueDepth: null, activeJobs: null });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
 
@@ -45,6 +36,31 @@ export function Navbar({ onOpenSettings }: NavbarProps) {
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/ready`);
+        const data = await response.json() as {
+          status: string;
+          checks?: { workerReachable?: boolean; localWanReady?: boolean; queueDepth?: number | null; activeJobs?: number | null };
+        };
+        if (active) setRuntime({
+          cpuReady: response.ok && data.status === 'ready',
+          gpuReachable: data.checks?.workerReachable === true,
+          localWanReady: data.checks?.localWanReady === true,
+          queueDepth: data.checks?.queueDepth ?? null,
+          activeJobs: data.checks?.activeJobs ?? null,
+        });
+      } catch {
+        if (active) setRuntime(current => ({ ...current, cpuReady: false, gpuReachable: false, localWanReady: false }));
+      }
+    };
+    void load();
+    const timer = window.setInterval(load, 30_000);
+    return () => { active = false; window.clearInterval(timer); };
   }, []);
 
   const navButtons: { id: typeof activeTab; label: string; icon: string }[] = [
@@ -114,6 +130,19 @@ export function Navbar({ onOpenSettings }: NavbarProps) {
         {/* Language selector — same context-driven hook, so selecting
             a language here is instantly reflected in Voice Lab & Captions */}
         <LanguageSelector compact />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '10px' }}>
+          <span title="API, database and CPU media tools" style={{
+            padding: '4px 7px', borderRadius: '999px',
+            color: runtime.cpuReady ? 'var(--vs-success)' : 'var(--vs-error)',
+            background: runtime.cpuReady ? 'rgba(34,197,94,.1)' : 'rgba(239,68,68,.1)',
+          }}>CPU {runtime.cpuReady ? 'Ready' : 'Offline'}</span>
+          <span title={runtime.gpuReachable ? `Active ${runtime.activeJobs ?? 0}, queue ${runtime.queueDepth ?? 0}` : 'GPU worker is not connected'} style={{
+            padding: '4px 7px', borderRadius: '999px',
+            color: runtime.localWanReady ? 'var(--vs-success)' : 'var(--vs-text-muted)',
+            background: runtime.localWanReady ? 'rgba(34,197,94,.1)' : 'var(--vs-bg-elevated)',
+          }}>GPU {runtime.localWanReady ? 'Ready' : runtime.gpuReachable ? 'Connected' : 'Offline'}</span>
+        </div>
 
         <div style={{ width: '1px', height: '26px', background: 'var(--vs-border)' }} />
 
@@ -212,12 +241,12 @@ export function Navbar({ onOpenSettings }: NavbarProps) {
           )}
         </div>
 
-        {authEnabled && user && (
+        {user && (
           <>
             <div style={{ width: '1px', height: '26px', background: 'var(--vs-border)' }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {user.photoURL ? (
-                <img src={user.photoURL} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%' }} />
+              {user.avatarUrl ? (
+                <img src={user.avatarUrl} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%' }} />
               ) : (
                 <div style={{
                   width: '28px', height: '28px', borderRadius: '50%', background: 'var(--vs-primary)',
@@ -228,7 +257,7 @@ export function Navbar({ onOpenSettings }: NavbarProps) {
               )}
               <button
                 type="button"
-                onClick={() => signOutUser()}
+                onClick={() => { void AuthService.logout(); }}
                 title="Logout"
                 style={{
                   fontSize: '12px', padding: '6px 10px', borderRadius: '8px',

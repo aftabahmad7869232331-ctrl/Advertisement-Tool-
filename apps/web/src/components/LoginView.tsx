@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { 
   Mail, 
   Lock, 
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { workspaceApi } from "../services/workspaceApi";
+import AuthService from "../services/auth";
 
 interface LoginViewProps {
   setActiveView: (view: any) => void;
@@ -26,46 +27,46 @@ interface LoginViewProps {
 export function LoginView({ setActiveView, triggerToast }: LoginViewProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"Admin" | "User" | "Staff">("Admin");
+  const [authMode, setAuthMode] = useState<"login" | "register" | "reset">("login");
+  const [resetToken, setResetToken] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [userEmail, setUserEmail] = useState("");
 
+  useEffect(() => {
+    const current = AuthService.getCurrentUser();
+    if (current?.email) setUserEmail(current.email);
+    else setEmail(window.localStorage.getItem("brick-maker-last-email") ?? "");
+    const params = new URLSearchParams(window.location.search);
+    const reset = params.get('reset_token');
+    const verify = params.get('verify_token');
+    if (reset) { setResetToken(reset); setAuthMode('reset'); }
+    if (verify) {
+      void AuthService.verifyEmail(verify).then(result => {
+        triggerToast(result.success ? 'Email verify ho gaya. Ab login karein.' : (result.error?.message ?? 'Verification failed.'), result.success ? 'success' : 'error');
+      });
+    }
+  }, []);
+
   const onSuccess = (nextEmail: string, _nextRole?: "Admin" | "User" | "Staff") => {
     setUserEmail(nextEmail);
   };
 
   const onLogout = () => {
-    window.sessionStorage.removeItem("brick-maker-local-session");
+    void AuthService.logout();
     setUserEmail("");
     setEmail("");
     setPassword("");
     triggerToast("Session disconnected.", "info");
   };
 
-  // Local role presets keep development usable until production auth is connected.
-  const handlePresetSelect = (presetRole: "Admin" | "User" | "Staff") => {
-    setRole(presetRole);
-    if (presetRole === "Admin") {
-      setEmail("admin@brickmaker.com");
-      setPassword("admin123");
-    } else if (presetRole === "Staff") {
-      setEmail("staff@brickmaker.com");
-      setPassword("staff123");
-    } else {
-      setEmail("user@brickmaker.com");
-      setPassword("user123");
-    }
-    setErrorMsg("");
-  };
-
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
 
-    if (!email || !password) {
+    if ((authMode !== 'reset' && !email) || !password) {
       setErrorMsg("All fields are required.");
       triggerToast("Please enter email and password.", "error");
       return;
@@ -73,42 +74,35 @@ export function LoginView({ setActiveView, triggerToast }: LoginViewProps) {
 
     setIsLoading(true);
 
-    // This is an explicit local workspace session, not production authentication.
-    {
-      const isPresetAdmin = email === "admin@brickmaker.com" && password === "admin123";
-      const isPresetStaff = email === "staff@brickmaker.com" && password === "staff123";
-      const isPresetUser = email === "user@brickmaker.com" && password === "user123";
-      
-      let finalRole = role;
-      if (isPresetAdmin) finalRole = "Admin";
-      else if (isPresetStaff) finalRole = "Staff";
-      else if (isPresetUser) finalRole = "User";
-
-      if (email.includes("@") && password.length >= 4) {
-        window.sessionStorage.setItem(
-          "brick-maker-local-session",
-          JSON.stringify({ email, role: finalRole, createdAt: new Date().toISOString() }),
-        );
-        if (rememberMe) window.localStorage.setItem("brick-maker-last-email", email);
-        void workspaceApi.action("login", "local-session-created", { email, role: finalRole });
-        onSuccess(email, finalRole);
-        triggerToast(`Local workspace opened for ${email} as ${finalRole}.`, "success");
-        
-        // Routing based on specific requirements:
-        // Admin -> Admin Dashboard, User -> Home/Workspace (Dashboard), Staff -> Assigned Dashboard (Studio)
-        if (finalRole === "Admin") {
-          setActiveView("dashboard");
-        } else if (finalRole === "Staff") {
-          setActiveView("studio");
-        } else {
-          setActiveView("dashboard");
+    if ((authMode === 'reset' || email.includes("@")) && password.length >= 10) {
+      const result = authMode === "register"
+        ? await AuthService.register(email, password)
+        : authMode === 'reset'
+          ? await AuthService.resetPassword(resetToken, password)
+          : await AuthService.login(email, password);
+      if (result.success) {
+        if (authMode === 'reset') {
+          setAuthMode('login'); setResetToken(''); setPassword('');
+          window.history.replaceState({}, '', '/login');
+          triggerToast('Password update ho gaya. Ab login karein.', 'success');
+          setIsLoading(false);
+          return;
         }
+        if (rememberMe) window.localStorage.setItem("brick-maker-last-email", email);
+        void workspaceApi.action("login", authMode === "register" ? "account-created" : "session-created", { email });
+        onSuccess(email);
+        triggerToast(authMode === "register" ? "Account successfully create ho gaya." : "Secure login successful.", "success");
+        setActiveView("dashboard");
       } else {
-        setErrorMsg("Enter a valid email and at least four password characters.");
-        triggerToast("Local session validation failed.", "error");
+        const message = result.error?.message ?? "Authentication failed.";
+        setErrorMsg(message);
+        triggerToast(message, "error");
       }
-      setIsLoading(false);
+    } else {
+      setErrorMsg("Valid email aur minimum 10-character password required hai.");
+      triggerToast("Password minimum 10 characters ka rakhein.", "error");
     }
+    setIsLoading(false);
   };
 
   return (
@@ -146,9 +140,9 @@ export function LoginView({ setActiveView, triggerToast }: LoginViewProps) {
             </div>
             
             <div className="space-y-2">
-              <h3 className="text-lg font-bold text-white">Active Session Detected</h3>
+              <h3 className="text-lg font-bold text-white">Local Session Found</h3>
               <p className="text-xs text-gray-400 leading-relaxed max-w-sm mx-auto">
-                You are currently authorized as <span className="text-[#F8B400] font-bold font-mono">{userEmail}</span>. Would you like to enter your workspace or change accounts?
+                This browser has a local workspace session for <span className="text-[#F8B400] font-bold font-mono">{userEmail}</span>. Open it or switch the local account.
               </p>
             </div>
 
@@ -183,28 +177,24 @@ export function LoginView({ setActiveView, triggerToast }: LoginViewProps) {
               </p>
             </div>
 
-            {/* Role / Account Preset selector */}
+            {/* Secure login / account creation */}
             <div className="mb-6">
               <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center sm:text-left">
-                Select testing credentials preset
+                Secure account access
               </span>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { label: "🛡️ Admin", role: "Admin" as const },
-                  { label: "👤 User", role: "User" as const },
-                  { label: "🛠️ Staff", role: "Staff" as const }
-                ].map(item => (
+              <div className="grid grid-cols-2 gap-2">
+                {([['login', 'Login'], ['register', 'Create Account']] as const).map(([mode, label]) => (
                   <button
-                    key={item.role}
+                    key={mode}
                     type="button"
-                    onClick={() => handlePresetSelect(item.role)}
+                    onClick={() => { setAuthMode(mode); setErrorMsg(''); }}
                     className={`py-2 rounded-xl text-[11px] font-bold border transition-all cursor-pointer ${
-                      role === item.role 
+                      authMode === mode
                         ? "border-[#F8B400] bg-[#F8B400]/10 text-[#F8B400] shadow-[0_0_10px_rgba(248,180,0,0.1)]" 
                         : "border-white/5 bg-[#0d0d0d] text-gray-400 hover:text-white hover:border-white/15"
                     }`}
                   >
-                    {item.label}
+                    {label}
                   </button>
                 ))}
               </div>
@@ -222,7 +212,7 @@ export function LoginView({ setActiveView, triggerToast }: LoginViewProps) {
               {/* User ID / Email */}
               <div className="space-y-1.5">
                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                  Authorized User ID / Email
+                  Email
                 </label>
                 <div className="relative">
                   <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
@@ -242,18 +232,17 @@ export function LoginView({ setActiveView, triggerToast }: LoginViewProps) {
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
                   <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                    Platform Password
+                    Password
                   </label>
                   <button
                     type="button"
-                    onClick={() => {
-                      void workspaceApi.action("login", "password-recovery-requested", { email });
-                      triggerToast(
-                        email.trim()
-                          ? "Password recovery request saved. Email delivery will start after mail service setup."
-                          : "Enter your email first, then request password recovery.",
-                        email.trim() ? "success" : "warning",
-                      );
+                    onClick={async () => {
+                      if (!email.includes('@')) {
+                        triggerToast('Reset ke liye valid email enter karein.', 'warning');
+                        return;
+                      }
+                      const result = await AuthService.requestPasswordReset(email);
+                      triggerToast(result.data?.message ?? result.error?.message ?? 'Reset request process ho gayi.', result.success ? 'success' : 'error');
                     }}
                     className="text-[10px] text-amber-500 font-bold hover:underline"
                   >
@@ -292,7 +281,7 @@ export function LoginView({ setActiveView, triggerToast }: LoginViewProps) {
                   />
                   <span>Keep session synchronized</span>
                 </label>
-                <span className="text-[10px] text-gray-600 font-mono">TLS v1.3</span>
+                <span className="text-[10px] text-gray-600 font-mono">Stored in this browser</span>
               </div>
 
               {/* Submit Login Button */}
@@ -306,12 +295,12 @@ export function LoginView({ setActiveView, triggerToast }: LoginViewProps) {
                   {isLoading ? (
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                      <span>Authenticating Credentials...</span>
+                      <span>{authMode === 'register' ? 'Creating Account...' : authMode === 'reset' ? 'Updating Password...' : 'Signing In...'}</span>
                     </div>
                   ) : (
                     <>
                       <LogIn size={14} />
-                      <span>Authorize Secure Workspace</span>
+                      <span>{authMode === 'register' ? 'Create Secure Account' : authMode === 'reset' ? 'Set New Password' : 'Sign In'}</span>
                     </>
                   )}
                 </button>
@@ -326,7 +315,7 @@ export function LoginView({ setActiveView, triggerToast }: LoginViewProps) {
               >
                 <ArrowLeft size={12} /> Back to main dashboard
               </button>
-              <span className="font-mono text-[10px] text-gray-700">Brick-Maker Studio Security v3.5</span>
+              <span className="font-mono text-[10px] text-gray-700">Brick-Maker Secure Workspace</span>
             </div>
           </div>
         )}

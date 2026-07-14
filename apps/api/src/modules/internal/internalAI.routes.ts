@@ -9,6 +9,8 @@ import { VideoModel } from '../../models/Video.model.js';
 import { getStorageProvider } from '../../services/storage/storageRegistry.js';
 import { StorageLimitError } from '../../services/storage/types.js';
 import { extractVideoMetadata } from '../../services/videoMetadata.service.js';
+import { retentionExpiry } from '../../services/mediaRetention.service.js';
+import { captureReservedCredits, releaseReservedCredits } from '../../services/creditLedger.service.js';
 
 const callbackSchema = z.object({
   status: z.enum(['processing', 'done', 'error']),
@@ -91,6 +93,7 @@ export async function internalAIRoutes(
       const videoId = randomUUID();
       const video = VideoModel.create({
         id: videoId,
+        userId: job.userId,
         jobId: job.id,
         projectId: job.projectId ?? 'default-project',
         originalFilename: safeFilename,
@@ -109,6 +112,8 @@ export async function internalAIRoutes(
         fps: metadata.fps,
         codec: metadata.codec,
         status: 'completed',
+        temporary: true,
+        expiresAt: retentionExpiry('GENERATED_VIDEO_RETENTION_HOURS', 24),
         metadata: metadata.warning ? { custom: { metadataWarning: metadata.warning } } : {},
       });
 
@@ -184,13 +189,22 @@ export async function internalAIRoutes(
           job.id,
           update.result ?? {},
         );
+        const actualCredits = update.result?.actualCredits;
+        captureReservedCredits(
+          job.id,
+          typeof actualCredits === 'number' && Number.isFinite(actualCredits)
+            ? actualCredits
+            : undefined,
+        );
       }
 
       if (update.status === 'error') {
         if (update.result?.errorCode === 'cancelled') {
           ProcessingJobModel.transition(job.id, 'cancelled', 'cancelled');
+          releaseReservedCredits(job.id, 'worker_cancelled');
         } else {
           ProcessingJobModel.markError(job.id, update.error ?? 'AI worker processing fail ho gayi.', update.result);
+          releaseReservedCredits(job.id, 'worker_failed');
         }
       }
 

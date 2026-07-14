@@ -15,6 +15,7 @@ export interface ReelClip {
   type: AcceptedVideoType;
   sizeBytes: number;
   objectUrl: string;
+  sourceFileId?: string;
   sourceDuration: number;
   trimStart: number;
   trimEnd: number;
@@ -121,8 +122,7 @@ const clone = <T>(value: T): T =>
   typeof structuredClone === "function"
     ? structuredClone(value)
     : (JSON.parse(JSON.stringify(value)) as T);
-const makeId = (prefix: string): string =>
-  `${prefix}-${crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`}`;
+const makeId = (prefix: string): string => `${prefix}-${createSecureId()}`;
 const clipDuration = (clip: ReelClip): number =>
   round((clip.trimEnd - clip.trimStart) / clip.playbackRate);
 const totalDuration = (clips: ReelClip[]): number =>
@@ -227,12 +227,15 @@ export class ReelEngine {
       throw this.fail(new ReelEngineError("TIMELINE_FULL", "The 30-second timeline is full."));
     }
     const metadata = await readMetadata(file);
+    const clipId = makeId("clip");
+    await saveReelSource(clipId, file);
     const clip: ReelClip = {
-      id: makeId("clip"),
+      id: clipId,
       name: file.name,
       type: file.type as AcceptedVideoType,
       sizeBytes: file.size,
       objectUrl: metadata.objectUrl,
+      sourceFileId: clipId,
       sourceDuration: metadata.duration,
       trimStart: 0,
       trimEnd: Math.min(metadata.duration, remaining),
@@ -302,6 +305,10 @@ export class ReelEngine {
     });
     if (clip.objectUrl.startsWith("blob:") && !this.project.clips.some((item) => item.objectUrl === clip.objectUrl)) {
       URL.revokeObjectURL(clip.objectUrl);
+    }
+    const sourceFileId = clip.sourceFileId ?? clip.id;
+    if (!this.project.clips.some((item) => (item.sourceFileId ?? item.id) === sourceFileId)) {
+      void deleteReelSource(sourceFileId).catch(() => undefined);
     }
   }
 
@@ -398,7 +405,41 @@ export class ReelEngine {
 
   public saveNow(): void {
     localStorage.setItem(this.storageKey(), JSON.stringify(this.project));
+    localStorage.setItem('reel-editor:last-project', this.project.id);
     this.emit({ type: "saved", projectId: this.project.id, savedAt: new Date().toISOString() });
+  }
+
+  public async loadLatestDraft(): Promise<ReelProject | null> {
+    const projectId = localStorage.getItem('reel-editor:last-project');
+    if (!projectId) return null;
+    const raw = localStorage.getItem(`reel-editor:project:${projectId}`);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as ReelProject;
+    const hydratedClips: ReelClip[] = [];
+    const objectUrls = new Map<string, string>();
+    for (const clip of parsed.clips) {
+      const sourceFileId = clip.sourceFileId ?? clip.id;
+      let objectUrl = objectUrls.get(sourceFileId);
+      if (!objectUrl) {
+        const source = await getReelSource(sourceFileId).catch(() => undefined);
+        if (!source) continue;
+        objectUrl = URL.createObjectURL(source);
+        objectUrls.set(sourceFileId, objectUrl);
+      }
+      hydratedClips.push({ ...clip, sourceFileId, objectUrl });
+    }
+
+    parsed.clips = normalizeTimeline(hydratedClips);
+    parsed.activeClipId = parsed.clips.some((clip) => clip.id === parsed.activeClipId)
+      ? parsed.activeClipId
+      : parsed.clips[0]?.id ?? null;
+    validateTimeline(parsed.clips);
+    this.project = parsed;
+    this.undoStack.length = 0;
+    this.redoStack.length = 0;
+    this.emitState("load-latest-draft");
+    return this.getProject();
   }
 
   public loadDraft(projectId = this.project.id): ReelProject {
@@ -482,4 +523,6 @@ export class ReelEngine {
   }
 }
 
+import { createSecureId } from '../../../utils/createId';
+import { deleteReelSource, getReelSource, saveReelSource } from './reel-file-store';
 

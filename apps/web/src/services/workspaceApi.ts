@@ -1,3 +1,5 @@
+import { createSecureId } from '../utils/createId';
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     ...init,
@@ -8,7 +10,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-interface LocalActionRecord {
+export interface LocalActionRecord {
   id: string;
   page: string;
   action: string;
@@ -29,6 +31,16 @@ function writeActionJournal(record: LocalActionRecord): void {
   }
 }
 
+function readActionJournal(page?: string): LocalActionRecord[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const records = JSON.parse(window.localStorage.getItem(ACTION_JOURNAL_KEY) ?? '[]') as LocalActionRecord[];
+    return page ? records.filter((record) => record.page === page) : records;
+  } catch {
+    return [];
+  }
+}
+
 function markActionSynced(localId: string): void {
   if (typeof window === 'undefined') return;
   try {
@@ -43,7 +55,7 @@ function markActionSynced(localId: string): void {
 }
 
 async function recordAction(page: string, action: string, payload: unknown): Promise<{ id: string; accepted: boolean }> {
-  const localId = crypto.randomUUID();
+  const localId = createSecureId();
   writeActionJournal({ id: localId, page, action, payload, createdAt: new Date().toISOString(), synced: false });
   try {
     const remote = await request<{ id: string; accepted: boolean }>('/api/workspace/actions', {
@@ -69,4 +81,5 @@ export const workspaceApi = {
   remove: (collection: string, id: string) =>
     request<void>(`/api/workspace/${collection}/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   action: (page: string, action: string, payload: unknown = {}) => recordAction(page, action, payload),
+  localActions: (page?: string) => readActionJournal(page),
 };

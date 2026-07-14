@@ -902,6 +902,214 @@
   transform: translateY(-8px) translateZ(24px) rotateX(1deg) scale(1.012);
 }
 
+.hero-galaxy {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: paint;
+  background:
+    radial-gradient(ellipse at 68% 48%, rgba(9, 8, 18, .12), rgba(2, 2, 7, .78) 74%),
+    linear-gradient(180deg, rgba(3, 3, 8, .2), rgba(2, 2, 5, .72));
+}
+
+.hero-galaxy::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  background:
+    linear-gradient(90deg, rgba(3, 3, 6, .62) 0%, rgba(3, 3, 7, .24) 42%, transparent 68%),
+    radial-gradient(ellipse at center, transparent 35%, rgba(0, 0, 3, .56) 100%);
+}
+
+.hero-nebula {
+  position: absolute;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+}
+
+.hero-nebula--gold {
+  width: 78%;
+  height: 72%;
+  right: -12%;
+  top: -18%;
+  opacity: .72;
+  filter: blur(58px) saturate(135%);
+  background:
+    radial-gradient(ellipse at 34% 55%, rgba(251, 191, 36, .28), transparent 34%),
+    radial-gradient(ellipse at 62% 38%, rgba(245, 158, 11, .18), transparent 46%),
+    radial-gradient(ellipse at 72% 72%, rgba(255, 224, 138, .12), transparent 38%);
+  animation: hero-nebula-drift 24s ease-in-out infinite alternate;
+}
+
+.hero-nebula--violet {
+  width: 68%;
+  height: 82%;
+  left: 16%;
+  bottom: -42%;
+  opacity: .48;
+  filter: blur(72px) saturate(150%);
+  background:
+    radial-gradient(ellipse at 48% 45%, rgba(124, 58, 237, .28), transparent 43%),
+    radial-gradient(ellipse at 68% 62%, rgba(219, 39, 119, .12), transparent 40%);
+  animation: hero-nebula-drift-reverse 31s ease-in-out infinite alternate;
+}
+
+.hero-nebula--blue {
+  width: 52%;
+  height: 62%;
+  left: -18%;
+  top: 8%;
+  opacity: .42;
+  filter: blur(66px) saturate(145%);
+  background:
+    radial-gradient(ellipse at center, rgba(14, 116, 144, .26), transparent 48%),
+    radial-gradient(ellipse at 58% 32%, rgba(56, 189, 248, .12), transparent 38%);
+  animation: hero-nebula-drift 28s ease-in-out -9s infinite alternate;
+}
+
+.hero-starfield {
+  position: absolute;
+  inset: -18%;
+  background-repeat: repeat;
+  will-change: transform, opacity;
+  mask-image: radial-gradient(ellipse at 58% 46%, #000 18%, transparent 88%);
+}
+
+.hero-starfield--far {
+  z-index: 3;
+  opacity: .34;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, .72) 0 .55px, transparent .9px),
+    radial-gradient(circle, rgba(173, 216, 255, .5) 0 .45px, transparent .8px);
+  background-position: 0 0, 37px 61px;
+  background-size: 86px 86px, 127px 127px;
+  animation: hero-stars-far 70s linear infinite;
+}
+
+.hero-starfield--mid {
+  z-index: 4;
+  opacity: .5;
+  background-image:
+    radial-gradient(circle, rgba(255, 246, 205, .9) 0 .9px, transparent 1.5px),
+    radial-gradient(circle, rgba(166, 214, 255, .72) 0 .8px, transparent 1.35px),
+    radial-gradient(circle, rgba(216, 180, 254, .62) 0 .7px, transparent 1.2px);
+  background-position: 13px 24px, 78px 19px, 41px 92px;
+  background-size: 146px 146px, 203px 203px, 251px 251px;
+  animation: hero-stars-mid 46s linear infinite;
+}
+
+.hero-starfield--near {
+  z-index: 5;
+  opacity: .74;
+  background-image:
+    radial-gradient(circle, #fff8db 0 1.35px, rgba(251, 191, 36, .32) 1.6px, transparent 3.5px),
+    radial-gradient(circle, #e1f4ff 0 1.1px, rgba(56, 189, 248, .24) 1.5px, transparent 3.2px);
+  background-position: 22px 48px, 142px 118px;
+  background-size: 286px 286px, 367px 367px;
+  animation: hero-stars-near 32s linear infinite;
+}
+
+.hero-cosmic-dust {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  opacity: .44;
+  mix-blend-mode: screen;
+  background:
+    conic-gradient(from 218deg at 72% 42%, transparent 0 18%, rgba(251, 191, 36, .07) 25%, transparent 35% 100%),
+    radial-gradient(ellipse at 74% 38%, transparent 0 18%, rgba(255, 230, 160, .07) 28%, transparent 48%);
+  filter: blur(12px);
+  animation: hero-dust-breathe 12s ease-in-out infinite;
+}
+
+@keyframes hero-nebula-drift {
+  from { transform: translate3d(-2%, -1%, 0) scale(1); }
+  to { transform: translate3d(5%, 4%, 0) scale(1.1) rotate(3deg); }
+}
+
+@keyframes hero-nebula-drift-reverse {
+  from { transform: translate3d(4%, 2%, 0) scale(1.08); }
+  to { transform: translate3d(-5%, -3%, 0) scale(.98) rotate(-4deg); }
+}
+
+@keyframes hero-stars-far {
+  to { transform: translate3d(42px, 56px, 0); }
+}
+
+@keyframes hero-stars-mid {
+  to { transform: translate3d(-62px, 86px, 0); }
+}
+
+@keyframes hero-stars-near {
+  to { transform: translate3d(78px, 118px, 0); }
+}
+
+@keyframes hero-dust-breathe {
+  0%, 100% { opacity: .28; transform: scale(1); }
+  50% { opacity: .55; transform: scale(1.08); }
+}
+
+@property --rendering-live-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.rendering-live-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  box-sizing: border-box;
+  border-radius: 28px;
+  padding: 2px;
+  background: #0a0a0a;
+  animation: bm-live-card-pulse 2.5s ease-in-out infinite;
+}
+
+.rendering-live-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--rendering-live-angle),
+    transparent 0%,
+    #fbbf24 8%,
+    #f59e0b 16%,
+    transparent 28%,
+    transparent 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: bm-rotate-live-border 3s linear infinite;
+}
+
+.rendering-live-card__inner {
+  position: relative;
+  z-index: 1;
+  border-radius: 26px;
+  background: #0f0f0f;
+}
+
+@keyframes bm-rotate-live-border {
+  to { --rendering-live-angle: 360deg; }
+}
+
+@keyframes bm-live-card-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, .15); }
+  50% { box-shadow: 0 0 32px rgba(245, 158, 11, .3); }
+}
+
 .bm-creative-preview {
   border: 1px solid color-mix(in srgb, var(--primary-color) 38%, rgba(255,255,255,.14));
   background: linear-gradient(145deg, rgba(255,255,255,.1), rgba(11,10,8,.88) 45%, rgba(0,0,0,.96));
@@ -953,6 +1161,14 @@
 
 @media (max-width: 640px) {
   .home-depth-scene::after { top: 380px; opacity: .28; }
+  .hero-galaxy::after {
+    background: radial-gradient(ellipse at center, transparent 28%, rgba(0, 0, 3, .58) 100%);
+  }
+  .hero-nebula--gold { width: 110%; right: -44%; opacity: .62; }
+  .hero-nebula--violet { width: 100%; left: -12%; opacity: .38; }
+  .hero-starfield--near { opacity: .58; }
+  .rendering-live-card { border-radius: 22px; }
+  .rendering-live-card__inner { border-radius: 20px; }
   .bm-poster-stage { min-height: 270px; }
   .bm-preview-poster { width: 45%; }
   .bm-preview-chip { font-size: 9px; padding: 7px 9px; }
@@ -961,6 +1177,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   .home-depth-scene .glass-prism-hover:hover { transform: translateY(-3px); }
+  .hero-nebula,
+  .hero-starfield,
+  .hero-cosmic-dust { animation: none; }
+  .rendering-live-card,
+  .rendering-live-card::before { animation: none; }
+  .rendering-live-card { box-shadow: 0 0 24px rgba(245, 158, 11, .18); }
 }
 
 /* Premium hero finish: restrained metallic highlights and deeper material layers. */

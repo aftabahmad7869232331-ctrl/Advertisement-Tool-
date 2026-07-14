@@ -36,6 +36,11 @@ def test_simulator_still_completes(monkeypatch) -> None:
     callbacks: list[dict[str, object]] = []
     monkeypatch.setattr(main.time, "sleep", lambda _: None)
     monkeypatch.setattr(main, "send_job_update", lambda _job_id, payload: callbacks.append(payload))
+    monkeypatch.setattr(
+        main,
+        "upload_generated_artifact",
+        lambda *_: {"status": "ok", "videoId": "simulated-video", "sha256": "abc"},
+    )
 
     main.run_callback_test("simulated-job")
 

@@ -4,12 +4,13 @@
 
 import type { VideoExportOptions } from '../types/video.types';
 import { VIDEO_STUDIO_CONFIG } from '../constants/videoStudioConfig';
+import { authenticatedFetch } from '../../../services/auth';
 
 const API_BASE = VIDEO_STUDIO_CONFIG.api.baseUrl;
 
 class VideoExportService {
   async export(videoId: string, options: VideoExportOptions): Promise<void> {
-    const res = await fetch(`${API_BASE}/api/video/export`, {
+    const res = await authenticatedFetch(`${API_BASE}/api/video/export`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ videoId, options }),
@@ -20,7 +21,7 @@ class VideoExportService {
   }
 
   async getExportFormats(): Promise<{ format: string; label: string }[]> {
-    const res = await fetch(`${API_BASE}/api/video/export/formats`);
+    const res = await authenticatedFetch(`${API_BASE}/api/video/export/formats`);
     if (!res.ok) throw new Error('Failed to fetch export formats');
     return res.json();
   }
@@ -33,7 +34,7 @@ class VideoExportService {
   }
 
   async estimateExportSize(videoId: string, options: VideoExportOptions): Promise<number> {
-    const res = await fetch(`${API_BASE}/api/video/export/estimate`, {
+    const res = await authenticatedFetch(`${API_BASE}/api/video/export/estimate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ videoId, options }),

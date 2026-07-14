@@ -7,6 +7,7 @@
 import type { ApiResponse, AsyncResult } from './types/advanced.types';
 import { getConfig } from './config/wan21.config';
 import AuthService from './services/auth';
+import { createSecureId } from './utils/createId';
 
 // ============================================================
 // 📦 CACHE LAYER  (Redis-like in-memory store)
@@ -77,7 +78,7 @@ class OfflineQueue {
 
   static enqueue(req: Omit<QueuedRequest, 'id' | 'timestamp' | 'retries'>): void {
     const queue = this.load();
-    queue.push({ ...req, id: crypto.randomUUID(), timestamp: Date.now(), retries: 0 });
+    queue.push({ ...req, id: createSecureId(), timestamp: Date.now(), retries: 0 });
     this.save(queue);
   }
 
@@ -225,8 +226,19 @@ class VersionControl {
   }
 
   private static async _hash(input: string): Promise<string> {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    if (typeof globalThis.crypto?.subtle?.digest === 'function') {
+      const buf = await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // LAN HTTP does not expose SubtleCrypto. This checksum detects local version
+    // corruption; it is not used for passwords, signatures or authentication.
+    let hash = 0x811c9dc5;
+    for (let index = 0; index < input.length; index += 1) {
+      hash ^= input.charCodeAt(index);
+      hash = Math.imul(hash, 0x01000193);
+    }
+    return `fnv1a-${(hash >>> 0).toString(16).padStart(8, '0')}`;
   }
 }
 

@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { copyText } from "../utils/copyText";
 import {
   Palette,
   Sparkles,
@@ -121,7 +122,7 @@ export function StudioView({ setActiveView }: StudioViewProps) {
   };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+    void copyText(text);
     setCopiedText(text);
     triggerToast(`Copied values: ${text} to clipboard!`, "success");
     setTimeout(() => setCopiedText(null), 2000);

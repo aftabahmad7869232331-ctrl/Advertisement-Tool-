@@ -15,6 +15,7 @@ import {
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import { VIDEO_STUDIO_CONFIG } from '../../constants/videoStudioConfig';
+import { authenticatedFetch } from '../../../../services/auth';
 
 const API_BASE = VIDEO_STUDIO_CONFIG.api.baseUrl;
 
@@ -62,7 +63,7 @@ export function AnalyticsDashboard() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`${API_BASE}/api/pro/analytics?days=${days}`)
+    authenticatedFetch(`${API_BASE}/api/pro/analytics?days=${days}`)
       .then(r => r.json())
       .then(setData)
       .catch(() => setError('Analytics load nahi ho paya'))

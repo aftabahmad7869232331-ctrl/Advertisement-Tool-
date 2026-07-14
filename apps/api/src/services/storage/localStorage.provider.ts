@@ -20,7 +20,11 @@ export class LocalStorageProvider implements StorageProvider {
 
   createObjectKey(jobId: string, extension: string): string {
     const safeJob = jobId.replace(/[^A-Za-z0-9_-]/g, '-').slice(0, 80);
-    const safeExtension = ['mp4', 'webm', 'mov'].includes(extension) ? extension : 'bin';
+    const safeExtension = [
+      'mp4', 'webm', 'mov',
+      'png', 'jpg', 'jpeg', 'webp',
+      'mp3', 'wav', 'm4a', 'aac', 'ogg',
+    ].includes(extension) ? extension : 'bin';
     return `generated/${safeJob}/${randomUUID()}.${safeExtension}`;
   }
 

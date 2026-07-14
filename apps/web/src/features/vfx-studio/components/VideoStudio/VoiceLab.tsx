@@ -12,7 +12,7 @@ export function VoiceLab() {
     voices, selectedVoice, settings, previewText, isGenerating, isPlaying,
     selectVoice, updateSettings, preview, stopAudio, setPreviewText,
     error,
-    clonedVoices, cloning, cloneError, cloneVoice, deleteClonedVoice,
+    clonedVoices, cloning, cloneError, cloneVoice, deleteClonedVoice, voiceCloningAvailable,
   } = useVoiceLab();
 
   const [cloneName, setCloneName] = useState('');
@@ -35,7 +35,9 @@ export function VoiceLab() {
           🎙️ Clone My Voice
         </h4>
         <p style={{ margin: 0, fontSize: '12px', color: 'var(--vs-text-muted)' }}>
-          Apni voice ke 1-3 clean sample recordings (kam se kam ~30 second, background noise ke bina) upload karo — AI usi voice mein bol payega.
+          {voiceCloningAvailable
+            ? 'Apni voice ke 1-3 clean sample recordings upload karo — AI usi voice mein bol payega.'
+            : 'Voice cloning model/provider abhi configured nahi hai. Normal English/Hindi voice generation available hai.'}
         </p>
 
         {clonedVoices.length > 0 && (
@@ -62,6 +64,7 @@ export function VoiceLab() {
         <form onSubmit={handleCloneSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <input
             type="text" placeholder="Voice ka naam (e.g. My Voice)" value={cloneName}
+            disabled={!voiceCloningAvailable}
             onChange={e => setCloneName(e.target.value)}
             style={{
               padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--vs-border)',
@@ -70,6 +73,7 @@ export function VoiceLab() {
           />
           <input
             type="file" accept="audio/*" multiple
+            disabled={!voiceCloningAvailable}
             onChange={e => setSampleFiles(Array.from(e.target.files ?? []).slice(0, 3))}
             style={{ fontSize: '12px', color: 'var(--vs-text-secondary)' }}
           />
@@ -80,12 +84,12 @@ export function VoiceLab() {
           )}
           <button
             type="submit"
-            disabled={cloning || !cloneName.trim() || sampleFiles.length === 0}
+            disabled={!voiceCloningAvailable || cloning || !cloneName.trim() || sampleFiles.length === 0}
             style={{
               padding: '9px', borderRadius: '6px', border: 'none',
               background: 'var(--vs-primary)', color: '#fff', fontSize: '13px', fontWeight: 600,
               cursor: cloning ? 'not-allowed' : 'pointer',
-              opacity: cloning || !cloneName.trim() || sampleFiles.length === 0 ? 0.5 : 1,
+              opacity: !voiceCloningAvailable || cloning || !cloneName.trim() || sampleFiles.length === 0 ? 0.5 : 1,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
             }}
           >

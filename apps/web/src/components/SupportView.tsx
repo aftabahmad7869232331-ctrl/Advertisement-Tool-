@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createSecureId } from "../utils/createId";
 import { 
   HelpCircle, 
   MessageSquare, 
@@ -160,7 +161,7 @@ export function SupportView({ triggerToast }: SupportViewProps) {
     }
 
     const newTicket: SupportTicket = {
-      id: "TKT_" + Math.random().toString(36).substr(2, 9).toUpperCase(),
+      id: `TKT_${createSecureId()}`.toUpperCase(),
       name: ticketName || "Anonymous Creator",
       email: ticketEmail,
       phone: ticketPhone || "Not Provided",
@@ -201,7 +202,7 @@ export function SupportView({ triggerToast }: SupportViewProps) {
     }
 
     const newFeedback: FeedbackMessage = {
-      id: "FDB_" + Math.random().toString(36).substr(2, 9).toUpperCase(),
+      id: `FDB_${createSecureId()}`.toUpperCase(),
       feedbackType,
       rating: feedbackRating,
       message: feedbackMessage,
@@ -233,7 +234,7 @@ export function SupportView({ triggerToast }: SupportViewProps) {
     const senderName = ticketEmail || "Anonymous User";
 
     const newReply: SupportReply = {
-      id: "REP_" + Math.random().toString(36).substr(2, 9).toUpperCase(),
+      id: `REP_${createSecureId()}`.toUpperCase(),
       sender: senderRole,
       senderName,
       message: text,
@@ -289,7 +290,7 @@ export function SupportView({ triggerToast }: SupportViewProps) {
     }
 
     const newFaq: FaqArticle = {
-      id: "FAQ_" + Math.random().toString(36).substr(2, 9).toUpperCase(),
+      id: `FAQ_${createSecureId()}`.toUpperCase(),
       question: newFaqQuestion,
       answer: newFaqAnswer,
       category: newFaqCategory

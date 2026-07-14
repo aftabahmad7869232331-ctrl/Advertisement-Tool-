@@ -3,6 +3,49 @@
 -- PHASE 1 DATABASE SCHEMA
 -- ============================================================
 
+CREATE TABLE IF NOT EXISTS users (
+  id             TEXT PRIMARY KEY,
+  email          TEXT NOT NULL UNIQUE COLLATE NOCASE,
+  password_hash  TEXT NOT NULL,
+  password_salt  TEXT NOT NULL,
+  first_name     TEXT NOT NULL DEFAULT '',
+  last_name      TEXT NOT NULL DEFAULT '',
+  role           TEXT NOT NULL DEFAULT 'user',
+  status         TEXT NOT NULL DEFAULT 'active',
+  email_verified_at TEXT,
+  created_at     TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at     TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_login_at  TEXT
+);
+
+CREATE TABLE IF NOT EXISTS auth_sessions (
+  id                  TEXT PRIMARY KEY,
+  user_id             TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  access_token_hash   TEXT NOT NULL UNIQUE,
+  refresh_token_hash  TEXT NOT NULL UNIQUE,
+  access_expires_at   TEXT NOT NULL,
+  refresh_expires_at  TEXT NOT NULL,
+  revoked_at          TEXT,
+  created_at          TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_used_at        TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_auth_sessions_user_active
+ON auth_sessions(user_id, revoked_at, refresh_expires_at);
+
+CREATE TABLE IF NOT EXISTS auth_action_tokens (
+  id          TEXT PRIMARY KEY,
+  user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  purpose     TEXT NOT NULL,
+  token_hash  TEXT NOT NULL UNIQUE,
+  expires_at  TEXT NOT NULL,
+  used_at     TEXT,
+  created_at  TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_auth_action_tokens_user_purpose
+ON auth_action_tokens(user_id, purpose, used_at, expires_at);
+
 CREATE TABLE IF NOT EXISTS projects (
   id             TEXT PRIMARY KEY,
   user_id        TEXT NOT NULL DEFAULT 'default',
@@ -92,6 +135,10 @@ CREATE TABLE IF NOT EXISTS videos (
   status             TEXT NOT NULL DEFAULT 'queued',
   metadata_json      TEXT NOT NULL DEFAULT '{}',
 
+  is_temporary       INTEGER NOT NULL DEFAULT 0,
+  expires_at         TEXT,
+  saved_at           TEXT,
+
   created_at         TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at         TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -155,3 +202,41 @@ CREATE TABLE IF NOT EXISTS workspace_actions (
   payload_json TEXT NOT NULL DEFAULT '{}',
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS credit_accounts (
+  user_id             TEXT PRIMARY KEY,
+  available_credits   REAL NOT NULL DEFAULT 0 CHECK (available_credits >= 0),
+  reserved_credits    REAL NOT NULL DEFAULT 0 CHECK (reserved_credits >= 0),
+  total_spent_credits REAL NOT NULL DEFAULT 0 CHECK (total_spent_credits >= 0),
+  created_at          TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at          TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS credit_reservations (
+  job_id            TEXT PRIMARY KEY REFERENCES processing_jobs(id) ON DELETE CASCADE,
+  user_id           TEXT NOT NULL REFERENCES credit_accounts(user_id) ON DELETE CASCADE,
+  reserved_credits  REAL NOT NULL CHECK (reserved_credits > 0),
+  captured_credits  REAL NOT NULL DEFAULT 0 CHECK (captured_credits >= 0),
+  status            TEXT NOT NULL DEFAULT 'reserved',
+  created_at        TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at        TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_credit_reservations_user_status
+ON credit_reservations(user_id, status);
+
+CREATE TABLE IF NOT EXISTS credit_ledger (
+  id                TEXT PRIMARY KEY,
+  user_id           TEXT NOT NULL REFERENCES credit_accounts(user_id) ON DELETE CASCADE,
+  job_id            TEXT REFERENCES processing_jobs(id) ON DELETE SET NULL,
+  event_type        TEXT NOT NULL,
+  amount_credits    REAL NOT NULL,
+  balance_after     REAL NOT NULL,
+  reserved_after    REAL NOT NULL,
+  metadata_json     TEXT NOT NULL DEFAULT '{}',
+  idempotency_key   TEXT NOT NULL UNIQUE,
+  created_at        TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_credit_ledger_user_created
+ON credit_ledger(user_id, created_at DESC);

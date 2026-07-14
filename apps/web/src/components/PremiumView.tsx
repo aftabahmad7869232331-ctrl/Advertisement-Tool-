@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { workspaceApi } from "../services/workspaceApi";
+import { workspaceApi, type LocalActionRecord } from "../services/workspaceApi";
+import { authenticatedFetch } from "../services/auth";
 import { 
   Sparkles, 
   Gem, 
@@ -39,17 +40,22 @@ const CURRENCY_CONFIG: Record<string, { symbol: string; rate: number; label: str
 export function PremiumView() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "quarterly" | "yearly">("yearly");
   const [currency, setCurrency] = useState<string>("INR");
-  const [selectedPlan, setSelectedPlan] = useState<string>("professional");
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [billingRequests, setBillingRequests] = useState<LocalActionRecord[]>(() => workspaceApi.localActions("premium"));
+  const [creditStats, setCreditStats] = useState({
+    available: "—", reserved: "—", spent: "—", status: "Connecting…"
+  });
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, action = "ui-action", payload: Record<string, unknown> = {}) => {
     setToastMessage(msg);
-    void workspaceApi.action("premium", "ui-action", { message: msg }).catch(() => undefined);
+    void workspaceApi.action("premium", action, { ...payload, message: msg }).catch(() => undefined);
+    setBillingRequests(workspaceApi.localActions("premium"));
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // Auto-detect country based on timezone on mount (simulated local optimization)
+  // Suggest a currency from the browser timezone.
   useEffect(() => {
     try {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -69,6 +75,28 @@ export function PremiumView() {
     } catch (e) {
       console.warn("Timezone-based country detection skipped.", e);
     }
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void authenticatedFetch("/api/credits/balance", { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Credit API ${response.status}`);
+        return response.json() as Promise<{
+          account: { available: number; reserved: number; spent: number };
+        }>;
+      })
+      .then(({ account }) => setCreditStats({
+        available: account.available.toLocaleString(),
+        reserved: account.reserved.toLocaleString(),
+        spent: account.spent.toLocaleString(),
+        status: "Live backend ledger",
+      }))
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setCreditStats((current) => ({ ...current, status: "Credit service unavailable" }));
+      });
+    return () => controller.abort();
   }, []);
 
   const currentCurrency = CURRENCY_CONFIG[currency] ?? CURRENCY_CONFIG.INR!;
@@ -155,23 +183,12 @@ export function PremiumView() {
     }
   ];
 
-  const creditStats = {
-    available: 1500,
-    used: 420,
-    remaining: 1080,
-    expiry: "July 25, 2026"
-  };
-
   const paymentMethods = {
     india: ["Google Pay", "PhonePe", "Paytm", "UPI", "Credit Card", "Debit Card", "Net Banking"],
     international: ["Visa", "MasterCard", "American Express", "Google Pay", "Apple Pay", "PayPal", "Bank Transfer"]
   };
 
-  const invoiceHistory = [
-    { id: "INV-2026-004", date: "June 25, 2026", amount: "₹2,999", status: "Paid" },
-    { id: "INV-2026-003", date: "May 25, 2026", amount: "₹2,999", status: "Paid" },
-    { id: "INV-2026-002", date: "April 25, 2026", amount: "₹2,999", status: "Paid" }
-  ];
+  const invoiceHistory: Array<{ id: string; date: string; amount: string; status: string }> = [];
 
   const downloadInvoice = (invoice: { id: string; date: string; amount: string }) => {
     const documentHtml = `<!doctype html><html><head><meta charset="utf-8"><title>${invoice.id}</title></head><body style="font-family:Arial,sans-serif;padding:40px"><h1>Brick-Maker Studio</h1><h2>Invoice ${invoice.id}</h2><p>Date: ${invoice.date}</p><p>Amount: ${invoice.amount}</p><p>Status: Paid</p></body></html>`;
@@ -181,14 +198,14 @@ export function PremiumView() {
     anchor.download = `${invoice.id}.html`;
     anchor.click();
     URL.revokeObjectURL(url);
-    showToast(`Invoice ${invoice.id} downloaded.`);
+    showToast(`Invoice ${invoice.id} downloaded.`, "invoice-downloaded", { invoiceId: invoice.id });
   };
 
   const faqs = [
     { q: "How does the Credits system work?", a: "Credits are used for heavy AI tasks such as premium voice generation, advanced high-res image creations, and automated 4K video rendering. Every plan includes a monthly credit allocation. Additional credits can be purchased at any time." },
     { q: "Can I upgrade or downgrade my membership at any time?", a: "Yes. Upgrades take effect immediately and are pro-rated. Downgrades take effect at the end of your current billing cycle. All plans can be easily managed dynamically via this Membership workspace." },
     { q: "What is the commercial license policy?", a: "All assets created during a valid premium membership include a full, royalty-free, lifetime commercial license. You can use your designs in commercial ads, print packages, client websites, and social media promotions without any attribution." },
-    { q: "Is payment processing secure?", a: "Absolutely. All payment gateways are processed via fully encrypted AES-256 PCI-DSS compliant providers (Stripe, Razorpay, or PayPal) managed dynamically by our secure Admin Dashboard." }
+    { q: "Is payment processing available?", a: "Not yet. This workspace currently records plan requests locally and does not charge a payment method. A verified payment gateway must be configured before checkout is enabled." }
   ];
 
   return (
@@ -298,7 +315,13 @@ export function PremiumView() {
               <button
                 onClick={() => {
                   setSelectedPlan(plan.id);
-                  showToast(`Plan-change request saved for ${plan.name}. No payment was charged.`);
+                  showToast(`Plan-change request saved for ${plan.name}. No payment was charged.`, "plan-change-requested", {
+                    planId: plan.id,
+                    planName: plan.name,
+                    billingCycle,
+                    currency,
+                    displayedPrice: `${currentCurrency.symbol}${getPrice(plan.priceINR)}`,
+                  });
                 }}
                 className={`w-full py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer ${
                   plan.highlight
@@ -306,7 +329,7 @@ export function PremiumView() {
                     : "bg-white/5 hover:bg-white/10 text-white border border-white/10"
                 }`}
               >
-                Upgrade Workspace Now
+                {selectedPlan === plan.id ? "Request Saved" : "Upgrade Workspace Now"}
               </button>
 
               {/* Feature check list */}
@@ -342,7 +365,7 @@ export function PremiumView() {
           </p>
         </div>
         <button 
-          onClick={() => showToast("Enterprise sales request saved for follow-up.")}
+          onClick={() => showToast("Enterprise sales request saved for follow-up.", "enterprise-sales-requested")}
           className="px-6 py-3 rounded-xl bg-white text-black font-black text-xs uppercase tracking-widest hover:bg-gray-100 transition-all cursor-pointer whitespace-nowrap"
         >
           Contact Enterprise Sales
@@ -364,7 +387,7 @@ export function PremiumView() {
                   AI Credits Allocation
                 </h4>
                 <button 
-                  onClick={() => showToast("Additional-credit request saved. No payment was charged.")}
+                  onClick={() => showToast("Additional-credit request saved. No payment was charged.", "additional-credits-requested")}
                   className="text-[9px] font-bold text-amber-400 hover:underline cursor-pointer"
                 >
                   Buy Additional
@@ -377,18 +400,18 @@ export function PremiumView() {
                   <span className="block text-[8px] text-gray-500 uppercase">Available</span>
                 </div>
                 <div className="bg-zinc-950 p-2 rounded-lg border border-white/5">
-                  <span className="block text-base font-black text-gray-400">{creditStats.used}</span>
-                  <span className="block text-[8px] text-gray-500 uppercase">Used</span>
+                  <span className="block text-base font-black text-gray-400">{creditStats.reserved}</span>
+                  <span className="block text-[8px] text-gray-500 uppercase">Reserved</span>
                 </div>
                 <div className="bg-zinc-950 p-2 rounded-lg border border-white/5">
-                  <span className="block text-base font-black text-amber-400">{creditStats.remaining}</span>
-                  <span className="block text-[8px] text-gray-500 uppercase">Remaining</span>
+                  <span className="block text-base font-black text-amber-400">{creditStats.spent}</span>
+                  <span className="block text-[8px] text-gray-500 uppercase">Spent</span>
                 </div>
               </div>
 
               <div className="text-[9px] text-gray-500 flex justify-between">
-                <span>Credit cycle resets monthly</span>
-                <span>Expiry date: <strong className="text-gray-400">{creditStats.expiry}</strong></span>
+                <span>{creditStats.status}</span>
+                <span>Failed/cancelled jobs: <strong className="text-gray-400">auto-refund</strong></span>
               </div>
             </div>
 
@@ -396,26 +419,26 @@ export function PremiumView() {
             <div className="p-5 rounded-xl border border-white/5 bg-black/60 space-y-4">
               <div className="flex justify-between items-center border-b border-white/5 pb-2">
                 <h4 className="text-xs font-black text-white uppercase tracking-widest">
-                  Secure Cloud Storage
+                  Workspace Storage
                 </h4>
-                <span className="text-[9px] font-bold text-gray-500 font-mono">1.2 GB / 100 GB</span>
+                <span className="text-[9px] font-bold text-gray-500 font-mono">Browser local only</span>
               </div>
 
               {/* Progress bar */}
               <div className="space-y-1.5">
                 <div className="w-full h-1.5 bg-zinc-950 rounded-full overflow-hidden border border-white/5">
-                  <div className="h-full bg-amber-500 rounded-full" style={{ width: "1.2%" }} />
+                  <div className="h-full bg-amber-500 rounded-full" style={{ width: "0%" }} />
                 </div>
                 <div className="flex justify-between text-[9px] text-gray-500">
-                  <span>98.8% Available Storage</span>
-                  <span>Unlimited Backups</span>
+                  <span>Cloud quota unavailable</span>
+                  <span>No cloud backup</span>
                 </div>
               </div>
 
               <div className="flex justify-between text-[9px] text-gray-500 pt-1">
-                <span>Domain Backup Sync: <strong className="text-emerald-400">ACTIVE</strong></span>
+                <span>Cloud Sync: <strong className="text-gray-400">NOT CONFIGURED</strong></span>
                 <button 
-                  onClick={() => showToast("Project-restore request saved. Cloud restore requires configured storage.")}
+                  onClick={() => showToast("Project-restore request saved. Cloud restore requires configured storage.", "project-restore-requested")}
                   className="hover:text-white underline cursor-pointer"
                 >
                   Restore Projects
@@ -428,7 +451,7 @@ export function PremiumView() {
           {/* Payment Methods and Security info */}
           <div className="p-6 rounded-xl border border-white/5 bg-black/40 space-y-4">
             <h4 className="text-xs font-black text-white uppercase tracking-widest border-b border-white/5 pb-2.5">
-              Secure Global Payment Methods
+              Payment Gateway Status
             </h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
@@ -457,7 +480,7 @@ export function PremiumView() {
 
             <div className="pt-3 border-t border-white/5 flex items-center gap-2 text-[10px] text-gray-500">
               <ShieldCheck size={13} className="text-amber-500" />
-              <span>PCI-DSS Level 1 compliant secure payment processors. All credit logs are monitored securely.</span>
+              <span>No payment gateway is configured. Listed methods are options for a future verified integration; no charge is made here.</span>
             </div>
           </div>
 
@@ -500,35 +523,59 @@ export function PremiumView() {
             <div className="space-y-3.5 text-xs">
               <div className="flex justify-between">
                 <span className="text-gray-500">Current Plan</span>
-                <span className="font-extrabold text-amber-400">Professional (Active)</span>
+                <span className="font-extrabold text-amber-400">Local Workspace</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Billed At</span>
-                <span className="text-gray-200">₹2,999 / month (Billed Yearly)</span>
+                <span className="text-gray-200">Not connected</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Renewal Date</span>
-                <span className="text-gray-200 font-mono">June 25, 2027</span>
+                <span className="text-gray-200 font-mono">—</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Cloud Backups</span>
-                <span className="text-emerald-400 font-bold">Synchronized</span>
+                <span className="text-gray-400 font-bold">Local only</span>
               </div>
             </div>
 
             <div className="pt-2.5 border-t border-white/5 flex gap-2">
               <button 
-                onClick={() => showToast("Cancellation request saved for confirmation. The plan is still active.")}
+                onClick={() => showToast("Cancellation request saved for confirmation. The plan is still active.", "plan-cancellation-requested")}
                 className="flex-1 py-1.5 rounded bg-pink-500/10 hover:bg-pink-500/15 text-pink-400 font-bold text-[9px] uppercase tracking-wider transition-all border border-pink-500/10 cursor-pointer"
               >
                 Cancel Plan
               </button>
               <button 
-                onClick={() => showToast("Seat-management request saved for administrator review.")}
+                onClick={() => showToast("Seat-management request saved for administrator review.", "seat-management-requested")}
                 className="flex-1 py-1.5 rounded bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-[9px] uppercase tracking-wider transition-all border border-white/5 cursor-pointer"
               >
                 Manage Seats
               </button>
+            </div>
+
+            <div className="pt-3 border-t border-white/5 space-y-2" aria-live="polite">
+              <div className="flex items-center justify-between">
+                <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Pending Local Requests</span>
+                <span className="text-[9px] font-mono text-amber-400">
+                  {billingRequests.filter((item) => item.action.endsWith("-requested")).length}
+                </span>
+              </div>
+              {billingRequests.filter((item) => item.action.endsWith("-requested")).slice(0, 4).map((item) => {
+                const payload = item.payload && typeof item.payload === "object" ? item.payload as Record<string, unknown> : {};
+                return (
+                  <div key={item.id} className="rounded-lg border border-white/5 bg-zinc-950 p-2 text-[9px]">
+                    <div className="flex justify-between gap-2 text-gray-300">
+                      <span className="truncate">{String(payload.message ?? item.action)}</span>
+                      <span className={item.synced ? "text-emerald-400" : "text-amber-400"}>{item.synced ? "SYNCED" : "LOCAL"}</span>
+                    </div>
+                    <span className="mt-1 block text-[8px] text-gray-600">{new Date(item.createdAt).toLocaleString()}</span>
+                  </div>
+                );
+              })}
+              {billingRequests.filter((item) => item.action.endsWith("-requested")).length === 0 && (
+                <p className="text-[9px] text-gray-600">No pending plan or account requests.</p>
+              )}
             </div>
           </div>
 
@@ -558,6 +605,7 @@ export function PremiumView() {
                   </div>
                 </div>
               ))}
+              {invoiceHistory.length === 0 && <p className="text-[10px] text-gray-500">No invoices. Payment gateway is not configured.</p>}
             </div>
           </div>
 

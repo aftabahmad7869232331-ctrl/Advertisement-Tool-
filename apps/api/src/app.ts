@@ -1,13 +1,17 @@
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import multipart from '@fastify/multipart';
 import Fastify, { type FastifyInstance } from 'fastify';
 
 import { getEnvironment } from './config/environment.js';
 import { initializeDatabase } from './database/connection.js';
+import { creditRoutes } from './modules/credits/credit.routes.js';
 import { healthRoutes } from './modules/health/health.routes.js';
 import { internalAIRoutes } from './modules/internal/internalAI.routes.js';
 import { videoRoutes } from './modules/video/video.routes.js';
 import { workspaceRoutes } from './modules/workspace/workspace.routes.js';
+import { mediaRoutes } from './modules/media/media.routes.js';
+import { authRoutes } from './modules/auth/auth.routes.js';
 import { applicationPlugin, generateRequestId } from './plugins/application.plugin.js';
 import { rateLimitPlugin } from './plugins/rateLimit.plugin.js';
 
@@ -36,11 +40,15 @@ export async function buildApplication(): Promise<FastifyInstance> {
     credentials: true,
   });
   await app.register(helmet);
+  await app.register(multipart);
   await app.register(applicationPlugin);
   await app.register(rateLimitPlugin);
+  await app.register(authRoutes);
   await app.register(healthRoutes);
+  await app.register(creditRoutes);
   await app.register(videoRoutes);
   await app.register(workspaceRoutes);
   await app.register(internalAIRoutes);
+  await app.register(mediaRoutes);
   return app;
 }

@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { copyText } from "../utils/copyText";
+import { deleteGalleryFile, getGalleryFile, saveGalleryFile } from "../utils/galleryFileStore";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Search,
@@ -26,8 +28,6 @@ import {
   Info,
   SlidersHorizontal,
   FolderPlus,
-  Play,
-  Pause,
   CopyCheck,
   Layout,
   Layers,
@@ -56,7 +56,7 @@ import { getGalleryAssetsFromDb, saveGalleryAssetToDb, deleteGalleryAssetFromDb 
 // STATIC/MOCK DIGITAL ASSETS WITH RICH AND ACCURATE CATEGORIZATION
 // ─────────────────────────────────────────────────────────────────────────────
 
-const MOCK_ASSETS: GalleryAsset[] = [
+const SAMPLE_ASSETS: GalleryAsset[] = [
   // 🌐 WEBSITE DEMOS
   {
     id: "web-1",
@@ -427,7 +427,7 @@ const BRAND_ASSETS_SUBCATS = [
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function GalleryView() {
-  const [assets, setAssets] = useState<GalleryAsset[]>(MOCK_ASSETS);
+  const [assets, setAssets] = useState<GalleryAsset[]>(SAMPLE_ASSETS);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   // Load gallery assets from Firestore on mount
@@ -460,8 +460,6 @@ export function GalleryView() {
   // Interactive UI states
   const [selectedAsset, setSelectedAsset] = useState<GalleryAsset | null>(null);
   const [isPrevewingCode, setIsPreviewingCode] = useState<boolean>(false);
-  const [activeAudioPlaying, setActiveAudioPlaying] = useState<string | null>(null);
-  const [audioPlaybackProgress, setAudioPlaybackProgress] = useState<number>(30);
   const [copiedColor, setCopiedColor] = useState<string | null>(null);
   const [copiedText, setCopiedText] = useState<string | null>(null);
   
@@ -474,14 +472,17 @@ export function GalleryView() {
   const [uploadedFileName, setUploadedFileName] = useState("");
   const [uploadCategory, setUploadCategory] = useState("Images");
 
-  // Project targets for "Add to Project" quick action simulation
+  // Browser-local project targets for "Add to Project".
   const [showProjectModal, setShowProjectModal] = useState<GalleryAsset | null>(null);
-  const [activeProjects, setActiveProjects] = useState([
-    { id: "proj-1", name: "Premium Golden Estate Campaign", assetCount: 6 },
-    { id: "proj-2", name: "Sustainability Townhouse Launch", assetCount: 3 },
-    { id: "proj-3", name: "Silicon Skyline Elite Website", assetCount: 2 }
-  ]);
+  const [activeProjects, setActiveProjects] = useState<Array<{ id: string; name: string; assetCount: number }>>(() => {
+    try { return JSON.parse(localStorage.getItem('brick-maker-local:gallery-projects') ?? '[]'); }
+    catch { return []; }
+  });
   const [newProjectName, setNewProjectName] = useState("");
+
+  useEffect(() => {
+    localStorage.setItem('brick-maker-local:gallery-projects', JSON.stringify(activeProjects));
+  }, [activeProjects]);
 
   const showToast = (message: string) => {
     setToastMsg(message);
@@ -551,23 +552,6 @@ export function GalleryView() {
     setSelectedSubCategory("All");
   }, [selectedCategory]);
 
-  // Audio waveform playback simulation
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (activeAudioPlaying) {
-      interval = setInterval(() => {
-        setAudioPlaybackProgress((prev) => {
-          if (prev >= 100) {
-            setActiveAudioPlaying(null);
-            return 0;
-          }
-          return prev + 1;
-        });
-      }, 250);
-    }
-    return () => clearInterval(interval);
-  }, [activeAudioPlaying]);
-
   // ─────────────────────────────────────────────────────────────────────────────
   // INTERACTIVE ACTION SIMULATORS
   // ─────────────────────────────────────────────────────────────────────────────
@@ -596,6 +580,7 @@ export function GalleryView() {
 
     if (id.startsWith("user-")) {
       try {
+        await deleteGalleryFile(id);
         await deleteGalleryAssetFromDb(id);
         console.log(`Successfully deleted custom asset ${id} from local storage`);
       } catch (err) {
@@ -604,19 +589,33 @@ export function GalleryView() {
     }
   };
 
-  const handleDownload = (asset: GalleryAsset, e?: React.MouseEvent) => {
+  const handleDownload = async (asset: GalleryAsset, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    let href = asset.thumbnail;
+    let shouldRevoke = false;
+
+    if (asset.localFile) {
+      const storedFile = await getGalleryFile(asset.id).catch(() => undefined);
+      if (!storedFile) {
+        showToast(`Original file for "${asset.name}" is unavailable on this device.`);
+        return;
+      }
+      href = URL.createObjectURL(storedFile);
+      shouldRevoke = true;
+    }
+
     const anchor = document.createElement("a");
-    anchor.href = asset.thumbnail;
-    anchor.download = (asset.name ?? asset.id).replace(/[^a-z0-9._-]+/gi, "-").toLowerCase();
+    anchor.href = href;
+    anchor.download = asset.originalFileName ?? (asset.name ?? asset.id).replace(/[^a-z0-9._-]+/gi, "-").toLowerCase();
     anchor.target = "_blank";
     anchor.rel = "noopener noreferrer";
     anchor.click();
+    if (shouldRevoke) window.setTimeout(() => URL.revokeObjectURL(href), 0);
     setAssets(prev => prev.map(a => a.id === asset.id ? { ...a, downloads: a.downloads + 1 } : a));
     showToast(`Download opened for "${asset.name}".`);
   };
 
-  const handleDuplicate = (asset: GalleryAsset, e?: React.MouseEvent) => {
+  const handleDuplicate = async (asset: GalleryAsset, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     const newAsset: GalleryAsset = {
       ...asset,
@@ -628,14 +627,18 @@ export function GalleryView() {
       isFavorite: false
     };
     setAssets(prev => [newAsset, ...prev]);
-    void saveGalleryAssetToDb(newAsset);
+    if (asset.localFile) {
+      const sourceFile = await getGalleryFile(asset.id).catch(() => undefined);
+      if (sourceFile) await saveGalleryFile(newAsset.id, sourceFile);
+    }
+    await saveGalleryAssetToDb(newAsset);
     showToast(`Duplicated "${asset.name}" and saved it to the workspace.`);
   };
 
   const handleShare = (asset: GalleryAsset, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     const shareUrl = `${window.location.origin}/gallery?asset=${encodeURIComponent(asset.id)}`;
-    void navigator.clipboard.writeText(shareUrl);
+    void copyText(shareUrl);
     setCopiedText(asset.id);
     showToast(`Copied a gallery link for "${asset.name}".`);
     setTimeout(() => setCopiedText(null), 3000);
@@ -645,7 +648,7 @@ export function GalleryView() {
     setActiveProjects(prev =>
       prev.map(p => p.name === projectName ? { ...p, assetCount: p.assetCount + 1 } : p)
     );
-    showToast(`📦 Successfully added "${asset.name}" directly to project "${projectName}"!`);
+    showToast(`📦 Added "${asset.name}" to local project "${projectName}".`);
     setShowProjectModal(null);
   };
 
@@ -655,7 +658,7 @@ export function GalleryView() {
       ...prev,
       { id: `proj-${Date.now()}`, name: newProjectName, assetCount: 1 }
     ]);
-    showToast(`🚀 Created new project "${newProjectName}" and injected "${asset.name}".`);
+    showToast(`🚀 Created local project "${newProjectName}" and added "${asset.name}".`);
     setNewProjectName("");
     setShowProjectModal(null);
   };
@@ -685,46 +688,51 @@ export function GalleryView() {
     setIsUploading(true);
     setUploadedFileName(file.name);
     setUploadProgress(10);
-    
-    // Smooth progress simulation
+    let progress = 10;
+
     const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            const formattedSize = (file.size / (1024 * 1024)).toFixed(2) + " MB";
-            const newAsset: GalleryAsset = {
-              id: `user-${Date.now()}`,
-              name: file.name.replace(/\.[^/.]+$/, ""),
-              category: uploadCategory,
-              subCategory: uploadCategory === "Images" ? "Business" : "Raw Resource",
-              thumbnail: uploadCategory === "Images" 
-                ? "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=600&q=80"
-                : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80",
-              resolution: uploadCategory === "Images" ? "4000 x 3000" : "SaaS Object",
-              size: formattedSize,
-              createdAt: new Date().toISOString().split("T")[0],
-              downloads: 0,
-              views: 1,
-              isPremium: false,
-              isFavorite: false,
-              tags: ["User Uploaded", uploadCategory],
-              description: `A custom-uploaded workspace digital asset. File name: ${file.name}. Saved into secure workspace tenant bucket.`
-            };
-            setAssets(prev => [newAsset, ...prev]);
-            
-            // Persist metadata locally first and sync through the workspace API when available.
-            saveGalleryAssetToDb(newAsset).catch(err => {
-              console.error("Failed to sync uploaded asset metadata:", err);
-            });
-            setIsUploading(false);
-            setUploadProgress(0);
-            showToast(`Saved "${file.name}" metadata to the workspace. Original file remains on this device.`);
-          }, 400);
-          return 100;
-        }
-        return prev + 20;
-      });
+      progress = Math.min(100, progress + 20);
+      setUploadProgress(progress);
+      if (progress < 100) return;
+
+      clearInterval(interval);
+      window.setTimeout(() => {
+        const formattedSize = (file.size / (1024 * 1024)).toFixed(2) + " MB";
+        const newAsset: GalleryAsset = {
+          id: `user-${Date.now()}`,
+          name: file.name.replace(/\.[^/.]+$/, ""),
+          category: uploadCategory,
+          subCategory: uploadCategory === "Images" ? "Business" : "Raw Resource",
+          thumbnail: uploadCategory === "Images"
+            ? "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=600&q=80"
+            : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80",
+          resolution: uploadCategory === "Images" ? "4000 x 3000" : "SaaS Object",
+          size: formattedSize,
+          createdAt: new Date().toISOString().split("T")[0],
+          downloads: 0,
+          views: 1,
+          isPremium: false,
+          isFavorite: false,
+          tags: ["User Uploaded", uploadCategory],
+          description: `A custom-uploaded workspace digital asset. File name: ${file.name}. Saved in this device workspace.`,
+          localFile: true,
+          originalFileName: file.name,
+          mimeType: file.type || "application/octet-stream",
+        };
+        setAssets((current) => [newAsset, ...current]);
+
+        void Promise.all([saveGalleryFile(newAsset.id, file), saveGalleryAssetToDb(newAsset)]).then(() => {
+          setIsUploading(false);
+          setUploadProgress(0);
+          showToast(`Imported "${file.name}" with its original file into this device workspace.`);
+        }).catch((error) => {
+          console.error("Failed to persist imported gallery asset:", error);
+          setAssets((current) => current.filter((asset) => asset.id !== newAsset.id));
+          setIsUploading(false);
+          setUploadProgress(0);
+          showToast(`Could not import "${file.name}". Device storage may be full or blocked.`);
+        });
+      }, 400);
     }, 150);
   };
 
@@ -1087,7 +1095,6 @@ export function GalleryView() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {filteredAssets.map((asset) => {
                 const isFavorite = asset.isFavorite;
-                const isAudioPlaying = activeAudioPlaying === asset.id;
                 
                 return (
                   <motion.div
@@ -1153,19 +1160,9 @@ export function GalleryView() {
                       {/* Dynamic overlays based on category */}
                       {asset.category === "Audio & Music" && (
                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center p-4">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (isAudioPlaying) setActiveAudioPlaying(null);
-                              else {
-                                setActiveAudioPlaying(asset.id);
-                                showToast(`🎵 Listening to track sample: "${asset.name}"`);
-                              }
-                            }}
-                            className="w-12 h-12 rounded-full bg-[#F8B400] hover:scale-105 transition-transform flex items-center justify-center text-black font-bold cursor-pointer"
-                          >
-                            {isAudioPlaying ? <Pause size={18} /> : <Play size={18} className="ml-0.5" />}
-                          </button>
+                          <span className="px-3 py-2 rounded-lg bg-black/80 border border-white/10 text-[9px] font-bold uppercase text-gray-400">
+                            Audio preview unavailable
+                          </span>
                         </div>
                       )}
 
@@ -1276,7 +1273,7 @@ export function GalleryView() {
                   <Globe size={11} />
                   Enterprise Websites & UI
                 </span>
-                <span className="text-[9px] font-mono text-gray-500">11 interactive mock models</span>
+                <span className="text-[9px] font-mono text-gray-500">11 sample layouts</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-center">
                 {WEBSITE_DEMOS_SUBCATS.map((demo) => (
@@ -1656,16 +1653,13 @@ export function GalleryView() {
                         </span>
                       </div>
                       <p className="text-xs font-mono font-bold text-gray-400">
-                        {activeAudioPlaying === selectedAsset.id ? "ACTIVE AUDIO WAVEFORM STREAM" : "Sovereign Audio Sample"}
+                        Audio asset metadata
                       </p>
                       
-                      {/* Interactive simulated waveform bars */}
+                      {/* Static placeholder until an actual audio source is attached. */}
                       <div className="flex items-end justify-center gap-1 h-12 w-full max-w-sm mx-auto">
                         {Array.from({ length: 24 }).map((_, i) => {
-                          const isPlaying = activeAudioPlaying === selectedAsset.id;
-                          const height = isPlaying 
-                            ? Math.max(10, Math.sin((i + audioPlaybackProgress) * 0.5) * 44) 
-                            : 8;
+                          const height = 8;
                           return (
                             <div 
                               key={i}
@@ -1677,22 +1671,11 @@ export function GalleryView() {
                       </div>
 
                       <div className="flex items-center justify-center gap-4">
-                        <button
-                          onClick={() => {
-                            if (activeAudioPlaying === selectedAsset.id) {
-                              setActiveAudioPlaying(null);
-                            } else {
-                              setActiveAudioPlaying(selectedAsset.id);
-                              setAudioPlaybackProgress(30);
-                            }
-                          }}
-                          className="px-6 py-2 rounded-xl bg-white text-black text-[10px] font-black uppercase tracking-widest cursor-pointer flex items-center gap-1.5"
-                        >
-                          {activeAudioPlaying === selectedAsset.id ? <Pause size={10} /> : <Play size={10} />}
-                          {activeAudioPlaying === selectedAsset.id ? "Pause Sample" : "Play Sample"}
-                        </button>
+                        <span className="px-6 py-2 rounded-xl bg-zinc-900 border border-white/5 text-gray-500 text-[10px] font-black uppercase tracking-widest">
+                          Audio preview unavailable
+                        </span>
                         <span className="text-[10px] font-mono text-gray-500">
-                          {activeAudioPlaying === selectedAsset.id ? `${audioPlaybackProgress}%` : "0:00"} / {selectedAsset.duration}
+                          Duration: {selectedAsset.duration ?? "Unknown"}
                         </span>
                       </div>
                     </div>
@@ -1763,7 +1746,7 @@ export function GalleryView() {
                               <button
                                 key={color}
                                 onClick={() => {
-                                  navigator.clipboard.writeText(color);
+                                  void copyText(color);
                                   setCopiedColor(color);
                                   showToast(`📋 Copied color hex code: ${color}`);
                                   setTimeout(() => setCopiedColor(null), 2500);
@@ -1858,7 +1841,7 @@ export function GalleryView() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {selectedAsset.demoUrl && (
+                  {selectedAsset.demoUrl && !selectedAsset.demoUrl.includes('.brickmaker.studio') && (
                     <a
                       href={selectedAsset.demoUrl}
                       target="_blank"
@@ -1868,6 +1851,11 @@ export function GalleryView() {
                       <ExternalLink size={12} />
                       Live Preview Demo
                     </a>
+                  )}
+                  {selectedAsset.demoUrl?.includes('.brickmaker.studio') && (
+                    <span className="px-4 py-2.5 rounded-xl bg-zinc-900 text-gray-500 font-black text-[10px] uppercase tracking-wider border border-white/5">
+                      External demo not configured
+                    </span>
                   )}
 
                   <button
@@ -1927,7 +1915,7 @@ export function GalleryView() {
 
               <div className="space-y-4">
                 <p className="text-[11px] text-gray-400 leading-relaxed">
-                  Inject the resource <strong className="text-white">"{showProjectModal.name}"</strong> directly into your current sandboxed workspace.
+                  Add <strong className="text-white">"{showProjectModal.name}"</strong> to a browser-local project.
                 </p>
 
                 {/* Existing projects list */}
@@ -1946,6 +1934,7 @@ export function GalleryView() {
                         </span>
                       </button>
                     ))}
+                    {activeProjects.length === 0 && <p className="p-3 text-[10px] text-gray-500">No local projects yet. Create one below.</p>}
                   </div>
                 </div>
 

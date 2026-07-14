@@ -3,6 +3,7 @@
 // ============================================================
 
 import { VIDEO_STUDIO_CONFIG } from '../constants/videoStudioConfig';
+import { authenticatedFetch } from '../../../services/auth';
 
 const API_BASE = VIDEO_STUDIO_CONFIG.api.baseUrl;
 
@@ -39,14 +40,14 @@ class MusicService {
     const url = mood
       ? `${API_BASE}/api/music/tracks?mood=${mood}`
       : `${API_BASE}/api/music/tracks`;
-    const res = await fetch(url);
+    const res = await authenticatedFetch(url);
     if (!res.ok) throw new Error('Track list load nahi ho paya');
     const data = await res.json();
     return data.tracks;
   }
 
   async applyMusic(opts: MusicApplyOptions): Promise<{ outputId: string; url: string }> {
-    const res = await fetch(`${API_BASE}/api/music/apply`, {
+    const res = await authenticatedFetch(`${API_BASE}/api/music/apply`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify(opts),

@@ -60,6 +60,7 @@ storage/models/*
 # AI models and checkpoints
 models/
 checkpoints/
+.hf-cache/
 *.ckpt
 *.safetensors
 *.pt
@@ -104,6 +105,12 @@ logs/
 *.sqlite
 *.sqlite3
 *.db
+*.db-shm
+*.db-wal
+
+# Generated reports and smoke-test artifacts
+bundle-stats.html
+storage/image-smoke.png
 
 # Docker and local overrides
 docker-compose.override.yml
@@ -112,3 +119,5 @@ docker-compose.override.yml
 playwright-report/
 test-results/
 screenshots/
+# GCP Service Account Key
+gcp-key.json

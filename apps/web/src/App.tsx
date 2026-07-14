@@ -1,18 +1,6 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { HomePage } from './components/home/HomePage';
-import ProjectsPage from './pages/ProjectsPage';
-import VideoStudioPage from './features/vfx-studio/pages/VideoStudioPage';
-import TemplatesPage from './pages/TemplatesPage';
-import VideoPage from './pages/VideoPage';
-import GalleryPage from './pages/GalleryPage';
-import GrowthPage from './pages/GrowthPage';
-import PremiumPage from './pages/PremiumPage';
-import SupportPage from './pages/SupportPage';
-import LoginPage from './pages/LoginPage';
-import AnimationPage from './pages/AnimationPage';
-import CaptionPage from './pages/CaptionPage';
 import { Navbar } from './components/Navbar';
 import { TopBar } from './components/TopBar';
 import { INITIAL_CAMPAIGNS } from './data';
@@ -22,6 +10,21 @@ import {
   updateCampaignStatusInDb,
 } from './localStore';
 import type { Campaign, ViewType } from './types';
+
+const HomePage = lazy(() =>
+  import('./components/home/HomePage').then((module) => ({ default: module.HomePage })),
+);
+const ProjectsPage = lazy(() => import('./pages/ProjectsPage'));
+const VideoStudioPage = lazy(() => import('./features/vfx-studio/pages/VideoStudioPage'));
+const TemplatesPage = lazy(() => import('./pages/TemplatesPage'));
+const VideoPage = lazy(() => import('./pages/VideoPage'));
+const GalleryPage = lazy(() => import('./pages/GalleryPage'));
+const GrowthPage = lazy(() => import('./pages/GrowthPage'));
+const PremiumPage = lazy(() => import('./pages/PremiumPage'));
+const SupportPage = lazy(() => import('./pages/SupportPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const AnimationPage = lazy(() => import('./pages/AnimationPage'));
+const CaptionPage = lazy(() => import('./pages/CaptionPage'));
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -102,6 +105,10 @@ export function App() {
     setActiveView('studio');
   };
 
+  const handleOpenTemplateCategory = (category: string) => {
+    navigate(`${VIEW_PATHS.flyer}?category=${encodeURIComponent(category)}`);
+  };
+
   return (
     <div className="app-root relative">
       {/* Cosmic Nebula Background & Starry Particles */}
@@ -121,69 +128,80 @@ export function App() {
       </header>
 
       <main className="app-main">
-        {activeView === 'dashboard' ? (
-          <HomePage
-            campaigns={campaigns}
-            onSelectCampaign={handleSelectCampaign}
-            onNavigateToCreate={handleNavigateToCreate}
-            onToggleStatus={handleToggleStatus}
-          />
-        ) : activeView === 'projects' ? (
-          <ProjectsPage />
-        ) : activeView === 'studio' ? (
-          <VideoStudioPage />
-        ) : activeView === 'flyer' || activeView === 'ads' ? (
-          <TemplatesPage
-            campaigns={campaigns}
-            selectedCampaign={selectedCampaign}
-            onSaveCampaign={(campaign) => {
-              setCampaigns((currentCampaigns) => {
-                const existingIndex = currentCampaigns.findIndex(
-                  (item) => item.id === campaign.id,
-                );
+        <Suspense
+          fallback={(
+            <section className="app-shell" aria-live="polite">
+              <div className="status-card">Loading workspace…</div>
+            </section>
+          )}
+        >
+          {activeView === 'dashboard' ? (
+            <HomePage
+              campaigns={campaigns}
+              onSelectCampaign={handleSelectCampaign}
+              onNavigateToCreate={handleNavigateToCreate}
+              onNavigate={setActiveView}
+              onOpenTemplateCategory={handleOpenTemplateCategory}
+              onToggleStatus={handleToggleStatus}
+            />
+          ) : activeView === 'projects' ? (
+            <ProjectsPage />
+          ) : activeView === 'studio' ? (
+            <VideoStudioPage />
+          ) : activeView === 'flyer' || activeView === 'ads' ? (
+            <TemplatesPage
+              initialCategory={new URLSearchParams(location.search).get('category')}
+              campaigns={campaigns}
+              selectedCampaign={selectedCampaign}
+              onSaveCampaign={(campaign) => {
+                setCampaigns((currentCampaigns) => {
+                  const existingIndex = currentCampaigns.findIndex(
+                    (item) => item.id === campaign.id,
+                  );
 
-                if (existingIndex === -1) {
-                  return [campaign, ...currentCampaigns];
-                }
+                  if (existingIndex === -1) {
+                    return [campaign, ...currentCampaigns];
+                  }
 
-                return currentCampaigns.map((item) =>
-                  item.id === campaign.id ? campaign : item,
+                  return currentCampaigns.map((item) =>
+                    item.id === campaign.id ? campaign : item,
+                  );
+                });
+                setSelectedCampaign(campaign);
+                void saveCampaignToDb(campaign).then(
+                  () => triggerToast('Campaign saved.', 'success'),
+                  () => triggerToast('Campaign saved for this session only.', 'warning'),
                 );
-              });
-              setSelectedCampaign(campaign);
-              void saveCampaignToDb(campaign).then(
-                () => triggerToast('Campaign saved.', 'success'),
-                () => triggerToast('Campaign saved for this session only.', 'warning'),
-              );
-            }}
-            onSelectCampaign={setSelectedCampaign}
-            triggerToast={triggerToast}
-          />
-        ) : activeView === 'video' ? (
-          <VideoPage setActiveView={setActiveView} />
-        ) : activeView === 'gallery' ? (
-          <GalleryPage />
-        ) : activeView === 'growth' || activeView === 'analytics' ? (
-          <GrowthPage />
-        ) : activeView === 'premium' ? (
-          <PremiumPage />
-        ) : activeView === 'support' ? (
-          <SupportPage triggerToast={triggerToast} />
-        ) : activeView === 'login' ? (
-          <LoginPage setActiveView={setActiveView} triggerToast={triggerToast} />
-        ) : activeView === 'animation' ? (
-          <AnimationPage />
-        ) : activeView === 'caption' ? (
-          <CaptionPage />
-        ) : (
-          <section className="app-shell">
-            <div className="status-card">
-              <p className="eyebrow">Controlled migration</p>
-              <h1>{activeView}</h1>
-              <p>This page will be connected in its migration batch.</p>
-            </div>
-          </section>
-        )}
+              }}
+              onSelectCampaign={setSelectedCampaign}
+              triggerToast={triggerToast}
+            />
+          ) : activeView === 'video' ? (
+            <VideoPage setActiveView={setActiveView} />
+          ) : activeView === 'gallery' ? (
+            <GalleryPage />
+          ) : activeView === 'growth' || activeView === 'analytics' ? (
+            <GrowthPage />
+          ) : activeView === 'premium' ? (
+            <PremiumPage />
+          ) : activeView === 'support' ? (
+            <SupportPage triggerToast={triggerToast} />
+          ) : activeView === 'login' ? (
+            <LoginPage setActiveView={setActiveView} triggerToast={triggerToast} />
+          ) : activeView === 'animation' ? (
+            <AnimationPage />
+          ) : activeView === 'caption' ? (
+            <CaptionPage />
+          ) : (
+            <section className="app-shell">
+              <div className="status-card">
+                <p className="eyebrow">Controlled migration</p>
+                <h1>{activeView}</h1>
+                <p>This page will be connected in its migration batch.</p>
+              </div>
+            </section>
+          )}
+        </Suspense>
       </main>
 
       {toast && (

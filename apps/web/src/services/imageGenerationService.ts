@@ -1,5 +1,7 @@
 ﻿import type { GenerateImagesInput, GeneratedImage } from "../types/imageGenerator";
 
+import { authenticatedFetch } from "./auth";
+
 const palettes: Array<[string, string, string]> = [
   ["#100b08", "#c38734", "#3c160c"],
   ["#071d3f", "#f4a719", "#e9f2ff"],
@@ -16,7 +18,7 @@ const fallbackPalette: [string, string, string] = [
 export async function generateImages(
   input: GenerateImagesInput,
 ): Promise<GeneratedImage[]> {
-  const response = await fetch("/api/image-generator/generate", {
+  const response = await authenticatedFetch("/api/image-generator/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

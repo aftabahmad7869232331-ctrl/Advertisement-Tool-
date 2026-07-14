@@ -11,12 +11,13 @@
     "start": "node dist/index.js",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --maxWorkers=1",
     "clean": "powershell -NoProfile -Command \"if (Test-Path dist) { Remove-Item dist -Recurse -Force }\""
   },
   "dependencies": {
     "@fastify/cors": "^11.3.0",
     "@fastify/helmet": "^13.1.0",
+    "@fastify/multipart": "^10.1.0",
     "dotenv": "^17.4.2",
     "fastify": "^5.10.0",
     "zod": "^4.4.3"

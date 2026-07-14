@@ -4,12 +4,13 @@
 
 import type { VideoEditRequest, GeneratedVideo } from '../types/video.types';
 import { VIDEO_STUDIO_CONFIG } from '../constants/videoStudioConfig';
+import { authenticatedFetch } from '../../../services/auth';
 
 const API_BASE = VIDEO_STUDIO_CONFIG.api.baseUrl;
 
 class VideoEditingService {
   async applyEdits(request: VideoEditRequest): Promise<GeneratedVideo> {
-    const res = await fetch(`${API_BASE}/api/video/edit`, {
+    const res = await authenticatedFetch(`${API_BASE}/api/video/edit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
@@ -35,7 +36,7 @@ class VideoEditingService {
   }
 
   async mergeVideos(videoIds: string[]): Promise<GeneratedVideo> {
-    const res = await fetch(`${API_BASE}/api/video/merge`, {
+    const res = await authenticatedFetch(`${API_BASE}/api/video/merge`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ videoIds }),

@@ -3,13 +3,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { VideoModel } from '../models/Video.model.js';
+import { getStorageProvider } from './storage/storageRegistry.js';
 
 function retentionMilliseconds(name: string, fallbackHours: number): number {
   const hours = Number(process.env[name] ?? fallbackHours);
   return (Number.isFinite(hours) && hours > 0 ? hours : fallbackHours) * 3_600_000;
 }
 
-export async function cleanupLocalArtifacts(): Promise<{ removed: number }> {
+export async function cleanupLocalArtifacts(): Promise<{ removed: number; expiredVideos: number }> {
   const defaultRoot = path.resolve(
     path.dirname(fileURLToPath(import.meta.url)),
     '../../storage/generated-videos',
@@ -17,6 +18,14 @@ export async function cleanupLocalArtifacts(): Promise<{ removed: number }> {
   const root = path.resolve(
     process.env.LOCAL_STORAGE_ROOT?.trim() || defaultRoot,
   );
+  let expiredVideos = 0;
+  for (const video of VideoModel.findExpiredTemporary()) {
+    if (video.storageKey) {
+      try { await getStorageProvider().delete(video.storageKey); } catch { /* missing media is still removable */ }
+    }
+    VideoModel.delete(video.id);
+    expiredVideos += 1;
+  }
   const protectedKeys = new Set(
     VideoModel.all().filter((video) => video.status === 'completed').flatMap((video) =>
       video.storageKey ? [path.normalize(video.storageKey)] : [],
@@ -42,5 +51,5 @@ export async function cleanupLocalArtifacts(): Promise<{ removed: number }> {
   }
 
   await visit(root);
-  return { removed };
+  return { removed, expiredVideos };
 }

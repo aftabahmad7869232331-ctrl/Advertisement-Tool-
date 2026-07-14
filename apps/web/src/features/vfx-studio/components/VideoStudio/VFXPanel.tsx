@@ -11,6 +11,7 @@
 // ============================================================
 
 import React, { useState } from 'react';
+import { authenticatedFetch } from '../../../../services/auth';
 
 interface VFXPanelProps {
   videoId:  string | null;
@@ -115,7 +116,7 @@ export function VFXPanel({ videoId, onApplied }: VFXPanelProps) {
       if (kbEnabled)   body.kenBurns  = { direction: kbDirection };
       if (cinEnabled)  body.cinematic = { vignette, filmGrain, grainStrength: grainStr, filmGate, filmGateRatio: filmRatio, halation };
 
-      const res = await fetch(`${API_BASE}/api/vfx/render`, {
+      const res = await authenticatedFetch(`${API_BASE}/api/vfx/render`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(body),

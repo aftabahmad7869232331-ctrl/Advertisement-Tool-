@@ -6,6 +6,21 @@ import { getStorageProvider } from '../../services/storage/storageRegistry.js';
 import { getStartupState } from '../../runtime/startupState.js';
 
 export async function healthRoutes(app: FastifyInstance): Promise<void> {
+  app.get('/api/config/limits', async () => {
+    const provider = (process.env.VIDEO_PROVIDER ?? 'local-wan').toLowerCase();
+    const isPaidCloud = provider.includes('veo');
+    return {
+      maxClipCount: Number(process.env.MAX_PROMPTS_PER_JOB ?? 5),
+      clipDurationSeconds: Number(process.env.DEFAULT_CLIP_DURATION_SECONDS ?? 6),
+      provider: isPaidCloud ? 'veo' : provider.includes('huggingface') ? 'hf' : 'local',
+      veoModel: isPaidCloud ? (process.env.VEO_MODEL ?? 'veo-3.1') : null,
+      costPerSecondUsd: isPaidCloud ? Number(process.env.VEO_COST_PER_SECOND_USD ?? 0) : 0,
+      costNote: isPaidCloud
+        ? 'Paid cloud provider estimate; final credits actual usage par settle honge.'
+        : 'Local/open-source engine: provider API charge nahi, server/GPU usage credits apply honge.',
+    };
+  });
+
   app.get('/api/health', async () => {
     db.prepare('SELECT 1').get();
     return {

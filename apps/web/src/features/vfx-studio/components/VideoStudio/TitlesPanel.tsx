@@ -7,6 +7,7 @@
 // ============================================================
 
 import React, { useState } from 'react';
+import { authenticatedFetch } from '../../../../services/auth';
 
 type TextAnimation = 'none' | 'fade_in' | 'fade_out' | 'fade_in_out' | 'slide_up' | 'slide_down' | 'slide_left' | 'slide_right' | 'zoom_in' | 'typewriter';
 type TextPosition  = 'top-left' | 'top-center' | 'top-right' | 'middle-left' | 'center' | 'middle-right' | 'bottom-left' | 'bottom-center' | 'bottom-right' | 'lower-third';
@@ -125,7 +126,7 @@ export function TitlesPanel({ videoId, videoDuration, onApplied }: TitlesPanelPr
 
     try {
       const API_BASE = import.meta.env.VITE_API_URL || '';
-      const res = await fetch(`${API_BASE}/api/titles/apply`, {
+      const res = await authenticatedFetch(`${API_BASE}/api/titles/apply`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ videoId, layers }),

@@ -1,6 +1,7 @@
 import json
 import hashlib
 import os
+import tempfile
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -17,6 +18,7 @@ from .providers.base import ProviderError, VideoProviderRequest
 from .providers.provider_registry import get_provider
 from .cleanup import cleanup_abandoned_temp_files
 from .queue.job_queue import InProcessJobQueue, QueueFullError, QueuedJob
+from .local_ai import router as local_ai_router
 
 WORKER_ROOT = Path(__file__).resolve().parents[1]
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -54,6 +56,7 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+app.include_router(local_ai_router)
 
 
 class VideoGenerationRequest(BaseModel):

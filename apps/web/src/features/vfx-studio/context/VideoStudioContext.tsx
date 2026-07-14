@@ -27,7 +27,7 @@ export interface VideoStudioContextValue {
   generationFailedClips: { index: number; prompt: string; error: string }[] | null;
   generateVideo: (request: VideoGenerationRequest) => Promise<void>;
   cancelGeneration: () => void;
-  addImportedVideo: (videoData: { id: string; url: string; thumbnailUrl: string; duration: number; format: string; quality: string; aspectRatio: string; fileSize: number; filename: string }) => void;
+  addImportedVideo: (videoData: { id: string; url: string; thumbnailUrl: string; duration: number; format: string; quality: string; aspectRatio: string; fileSize: number; filename: string; temporary?: boolean; expiresAt?: string }) => void;
 
   // Voice Lab
   voiceLabState: VoiceLabState;

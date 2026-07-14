@@ -40,6 +40,15 @@ local-wan = [
   "scipy>=1.14,<2.0",
   "decord>=0.6,<1.0; python_version < '3.13'"
 ]
+local-ai = [
+  "faster-whisper>=1.1,<2.0",
+  "soundfile>=0.12,<1.0",
+  "torch>=2.4,<3.0",
+  "transformers>=4.49,<6.0",
+  "diffusers>=0.32,<1.0",
+  "numpy>=1.26,<2.0",
+  "pillow>=10,<13"
+]
 
 [tool.setuptools.packages.find]
 where = ["."]

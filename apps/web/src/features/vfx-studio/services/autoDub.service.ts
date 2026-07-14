@@ -3,6 +3,7 @@
 // ============================================================
 
 import { VIDEO_STUDIO_CONFIG } from '../constants/videoStudioConfig';
+import { authenticatedFetch } from '../../../services/auth';
 
 const API_BASE = VIDEO_STUDIO_CONFIG.api.baseUrl;
 
@@ -25,7 +26,7 @@ class AutoDubService {
     targetLanguage: string;
     voiceId?: string;
   }): Promise<{ jobId: string }> {
-    const res = await fetch(`${API_BASE}/api/dub/start`, {
+    const res = await authenticatedFetch(`${API_BASE}/api/dub/start`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(opts),
@@ -38,7 +39,7 @@ class AutoDubService {
   }
 
   async pollStatus(jobId: string): Promise<DubJobStatus> {
-    const res = await fetch(`${API_BASE}/api/dub/${jobId}`);
+    const res = await authenticatedFetch(`${API_BASE}/api/dub/${jobId}`);
     if (!res.ok) throw new Error('Status check failed');
     return res.json();
   }

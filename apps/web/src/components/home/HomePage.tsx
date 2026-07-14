@@ -18,8 +18,9 @@ import {
   Sparkles,
   Video
 } from "lucide-react";
-import type { Campaign } from "../../types";
+import type { Campaign, ViewType } from "../../types";
 import { useHomePage, type HomeProjectItem, type HomeProjectTab } from "../../hooks/useHomePage";
+import { HeroGalaxy } from "./HeroGalaxy";
 import StudioCoreCard from "./StudioCoreCard";
 import "../../styles/glass.css";
 
@@ -27,6 +28,8 @@ interface HomePageProps {
   campaigns: Campaign[];
   onSelectCampaign: (camp: Campaign) => void;
   onNavigateToCreate: () => void;
+  onNavigate: (view: ViewType) => void;
+  onOpenTemplateCategory: (category: string) => void;
   onToggleStatus: (id: string) => void;
 }
 
@@ -96,7 +99,7 @@ function ProjectCard({
   );
 }
 
-export function HomePage({ campaigns, onSelectCampaign, onNavigateToCreate, onToggleStatus }: HomePageProps) {
+export function HomePage({ campaigns, onSelectCampaign, onNavigateToCreate, onNavigate, onOpenTemplateCategory, onToggleStatus }: HomePageProps) {
   const home = useHomePage(campaigns);
 
   return (
@@ -115,9 +118,11 @@ export function HomePage({ campaigns, onSelectCampaign, onNavigateToCreate, onTo
         }}
       />
 
-      <section className="relative grid min-h-[640px] min-w-0 grid-cols-1 items-center gap-8 py-8 sm:min-h-[700px] sm:py-10 lg:min-h-[calc(100vh-182px)] lg:grid-cols-12 lg:gap-12 lg:py-12 xl:min-h-[760px]" aria-labelledby="hero-heading">
+      <section className="relative grid min-h-[640px] min-w-0 grid-cols-1 items-center gap-8 overflow-hidden py-8 sm:min-h-[700px] sm:py-10 lg:min-h-[calc(100vh-182px)] lg:grid-cols-12 lg:gap-12 lg:py-12 xl:min-h-[760px]" aria-labelledby="hero-heading">
+        <HeroGalaxy />
+
         <motion.div
-          className="min-w-0 lg:col-span-6"
+          className="relative z-10 min-w-0 lg:col-span-6"
           initial={{ opacity: 0, y: 22 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45 }}
@@ -142,9 +147,9 @@ export function HomePage({ campaigns, onSelectCampaign, onNavigateToCreate, onTo
               Start Creating
             </button>
             <button
-              onClick={() => document.getElementById("home-projects-section")?.scrollIntoView({ behavior: "smooth" })}
+              onClick={() => onNavigate("flyer")}
               className="btn-ghost inline-flex items-center gap-2 px-5 py-3 text-sm font-bold sm:px-6 sm:py-3.5"
-              aria-label="Explore templates section"
+              aria-label="Open templates"
             >
               Explore Templates
               <ArrowRight size={17} aria-hidden="true" />
@@ -167,12 +172,12 @@ export function HomePage({ campaigns, onSelectCampaign, onNavigateToCreate, onTo
         </motion.div>
 
         <motion.div
-          className="min-w-0 lg:col-span-6"
+          className="relative z-10 min-w-0 lg:col-span-6"
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.08 }}
         >
-          <StudioCoreCard />
+          <StudioCoreCard onNavigate={onNavigate} />
         </motion.div>
       </section>
 
@@ -203,7 +208,7 @@ export function HomePage({ campaigns, onSelectCampaign, onNavigateToCreate, onTo
           {home.popularCategories.map((category) => {
             const Icon = categoryIcons[category.icon as keyof typeof categoryIcons] || FileText;
             return (
-              <button key={category.name} onClick={onNavigateToCreate} className="glass-prism glass-prism-hover rounded-lg p-4 text-left sm:p-5" aria-label={`Browse ${category.name} templates`}>
+              <button key={category.name} onClick={() => onOpenTemplateCategory(category.templateCategory)} className="glass-prism glass-prism-hover rounded-lg p-4 text-left sm:p-5" aria-label={`Browse ${category.name} templates`}>
                 <Icon className="text-[var(--primary-color)]" size={22} aria-hidden="true" />
                 <div className="mt-4 text-sm font-black text-[var(--text-body)] sm:mt-5 sm:text-base">{category.name}</div>
                 <div className="mt-1 text-xs font-bold uppercase tracking-widest text-[var(--text-subtle)]">{category.count}</div>

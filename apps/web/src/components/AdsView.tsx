@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { copyText } from "../utils/copyText";
 import { motion, AnimatePresence } from "framer-motion";
 import { Campaign, Pamphlet } from "../types";
 import { useGemini } from "../hooks/useGemini";
@@ -57,7 +58,10 @@ interface RecentProject {
   services: string;
   offer: string;
 }
+
+const RECENT_PROJECTS_KEY = "brick-maker-local:designer-recent-projects";
 interface AdsViewProps {
+  initialCategory?: string | null;
   campaigns: Campaign[];
   onSaveCampaign: (campaign: Campaign) => void;
   selectedCampaign: Campaign | null;
@@ -204,6 +208,7 @@ const LAYOUT_STYLES = {
 };
 
 export function AdsView({
+  initialCategory,
   campaigns,
   onSaveCampaign,
   selectedCampaign,
@@ -212,7 +217,7 @@ export function AdsView({
 }: AdsViewProps) {
   const { suggestAdCopy } = useGemini();
   // LEFT PANEL STATES
-  const [selectedCategory, setSelectedCategory] = useState("Product Advertisement");
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory || "Product Advertisement");
   const [selectedTemplateStyle, setSelectedTemplateStyle] = useState("Luxury");
   
   // Business Info Inputs
@@ -268,7 +273,8 @@ export function AdsView({
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // RECENT PROJECTS LIST STATE
-  const [recentProjects, setRecentProjects] = useState<RecentProject[]>([
+  const [recentProjects, setRecentProjects] = useState<RecentProject[]>(() => {
+    const defaults: RecentProject[] = [
     {
       id: "project-1",
       name: "Gold-Vein Obsidian Brochure",
@@ -329,7 +335,24 @@ export function AdsView({
       services: "Obsidian Pit Smoked Ribeye • Gold Leaf Volcano Carpaccio • Smoked Amethyst Cocktails",
       offer: "Complimentary elite vintage sommelier wine pairings with our curated seven-course chef tasting menu.",
     }
-  ]);
+    ];
+    try {
+      const saved = JSON.parse(localStorage.getItem(RECENT_PROJECTS_KEY) ?? "[]") as RecentProject[];
+      return saved.length > 0
+        ? [...saved, ...defaults.filter((item) => !saved.some((savedItem) => savedItem.id === item.id))]
+        : defaults;
+    } catch {
+      return defaults;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(RECENT_PROJECTS_KEY, JSON.stringify(recentProjects.slice(0, 50)));
+    } catch (error) {
+      console.warn("Recent-project registry could not be saved on this device.", error);
+    }
+  }, [recentProjects]);
 
   // CATEGORIES
   const CATEGORIES = [
@@ -346,6 +369,12 @@ export function AdsView({
     "Job Vacancy",
     "Travel Package",
   ];
+
+  useEffect(() => {
+    if (initialCategory && CATEGORIES.includes(initialCategory)) {
+      setSelectedCategory(initialCategory);
+    }
+  }, [initialCategory]);
 
   // TEMPLATES Styles
   const TEMPLATE_STYLES = [
@@ -999,12 +1028,26 @@ export function AdsView({
         <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={() => {
-              setHeadline("Luxury Interlocking Modular Masonry");
-              setSubheading("Precision Engineering for Avant-Garde Structural Facades");
+              setBusinessName("");
+              setHeadline("");
+              setSubheading("");
+              setDescription("");
+              setServices("");
+              setOffer("");
+              setContactNumber("");
+              setEmail("");
+              setWebsite("");
+              setAddress("");
+              setSocialMedia("");
+              setUserPrompt("");
               setUploadedLogo(null);
               setUploadedImage(null);
               setUploadedQR(null);
               setUploadedIcon(null);
+              setHasGenerated(false);
+              setGenError(null);
+              setSuggestError(null);
+              triggerToast?.("Designer fields cleared.", "info");
             }}
             className="px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl border border-white/5 hover:border-white/10 bg-white/[0.02] hover:bg-white/[0.04] text-xs font-semibold text-gray-300 transition-all"
             id="reset-workspace-button"
@@ -1033,7 +1076,7 @@ export function AdsView({
             id="success-toast"
           >
             <CheckCircle size={15} className="text-emerald-400 animate-bounce" />
-            <span>Project has been successfully synced to Cloud Firestore and added to your Recent Projects registry.</span>
+            <span>Project saved to this device workspace and added to your persistent Recent Projects registry.</span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -2057,7 +2100,7 @@ export function AdsView({
                 <button
                   onClick={() => {
                     const shareText = `Flyer: ${headline} | Theme: ${brandStyle} | ${window.location.href}`;
-                    void navigator.clipboard.writeText(shareText);
+                    void copyText(shareText);
                     triggerToast?.("Flyer details copied for sharing.", "success");
                   }}
                   className="px-3 py-2 rounded-lg bg-zinc-900 border border-white/5 hover:border-white/10 text-zinc-300 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
@@ -2106,14 +2149,14 @@ export function AdsView({
                     : "border-white/5 bg-white/[0.01] hover:border-white/10 hover:bg-white/[0.02]"
                 }`}
               >
-                {/* Visual Thumbnail simulation */}
+                {/* Local layout preview */}
                 <div className="aspect-[16/9] rounded-lg bg-black/60 border border-white/5 flex items-center justify-center overflow-hidden relative">
                   {proj.image ? (
                     <img src={proj.image} alt={proj.name} className="w-full h-full object-cover filter brightness-90 group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="text-center space-y-1">
                       <FileText size={16} className="text-gray-600 mx-auto" />
-                      <span className="text-[8px] text-gray-600 font-black uppercase tracking-wider block">Mock Layout</span>
+                      <span className="text-[8px] text-gray-600 font-black uppercase tracking-wider block">Layout Preview</span>
                     </div>
                   )}
                   <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded text-[8px] bg-black/80 text-gray-300 border border-white/10 uppercase tracking-widest font-mono">

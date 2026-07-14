@@ -27,10 +27,15 @@ describe('Phase 4 safety policies', () => {
   });
 
   it('BYOK bypasses server cost while server-paid requires configured pricing', () => {
+    const previousLimit = process.env.MAX_DAILY_CLOUD_JOBS;
+    process.env.MAX_DAILY_CLOUD_JOBS = '999999';
     expect(enforceGenerationPolicy({ credentialSource: 'byok', duration: 10 })).toBeNull();
     const previous = process.env.HF_ESTIMATED_COST_PER_SECOND_USD;
     delete process.env.HF_ESTIMATED_COST_PER_SECOND_USD;
     expect(() => enforceGenerationPolicy({ credentialSource: 'server', duration: 10 })).toThrow('cost estimate');
     if (previous !== undefined) process.env.HF_ESTIMATED_COST_PER_SECOND_USD = previous;
+    else delete process.env.HF_ESTIMATED_COST_PER_SECOND_USD;
+    if (previousLimit !== undefined) process.env.MAX_DAILY_CLOUD_JOBS = previousLimit;
+    else delete process.env.MAX_DAILY_CLOUD_JOBS;
   });
 });

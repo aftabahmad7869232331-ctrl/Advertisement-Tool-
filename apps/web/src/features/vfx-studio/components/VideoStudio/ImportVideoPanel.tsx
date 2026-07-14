@@ -9,14 +9,12 @@
 //   - Per-file upload progress bar
 //   - Auto thumbnail + metadata extract (backend)
 //   - Seedha Timeline/VFX/Edit mein add ho jaata hai
-//   - MP4, MOV, WebM, AVI, MKV — sab supported
+//   - Browser-playable MP4 and WebM
 // ============================================================
 
 import React, { useState, useRef, useCallback } from 'react';
 import { useVideoStudio } from '../../hooks/useVideoStudio';
-import { VIDEO_STUDIO_CONFIG } from '../../constants/videoStudioConfig';
-
-const API_BASE = VIDEO_STUDIO_CONFIG.api.baseUrl;
+import { authenticatedFetch } from '../../../../services/auth';
 
 interface ImportedFile {
   id:          string;
@@ -34,12 +32,14 @@ interface ImportedFile {
     quality:     string;
     format:      string;
     fileSize:    number;
+    temporary:   boolean;
+    expiresAt?:  string;
   };
   error?:      string;
 }
 
-const ACCEPTED_TYPES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/avi', 'video/x-matroska'];
-const ACCEPTED_EXT   = ['.mp4', '.mov', '.webm', '.avi', '.mkv'];
+const ACCEPTED_TYPES = ['video/mp4', 'video/webm'];
+const ACCEPTED_EXT   = ['.mp4', '.webm'];
 const MAX_SIZE_MB    = 500;
 
 function fmtSize(bytes: number) {
@@ -64,7 +64,7 @@ export function ImportVideoPanel() {
   function validateFile(file: File): string | null {
     const ext = '.' + file.name.split('.').pop()?.toLowerCase();
     if (!ACCEPTED_EXT.includes(ext) && !ACCEPTED_TYPES.includes(file.type)) {
-      return `Format supported nahi: ${ext}. MP4, MOV, WebM, AVI ya MKV use karo.`;
+      return `Format supported nahi: ${ext}. Browser-playable MP4 ya WebM use karo.`;
     }
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
       return `File too large: ${fmtSize(file.size)}. Max ${MAX_SIZE_MB}MB allowed.`;
@@ -72,63 +72,50 @@ export function ImportVideoPanel() {
     return null;
   }
 
-  async function uploadFile(importedFile: ImportedFile) {
-    const formData = new FormData();
-    formData.append('video', importedFile.file);
+  async function importFile(importedFile: ImportedFile) {
+    const objectUrl = URL.createObjectURL(importedFile.file);
+    const metadata = await new Promise<{ duration: number; width: number; height: number }>((resolve) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = () => resolve({ duration: video.duration || 0, width: video.videoWidth, height: video.videoHeight });
+      video.onerror = () => resolve({ duration: 0, width: 0, height: 0 });
+      video.src = objectUrl;
+    });
+    URL.revokeObjectURL(objectUrl);
 
-    await new Promise<void>((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', `${API_BASE}/api/video/upload`);
-
-      xhr.upload.onprogress = e => {
-        if (e.lengthComputable) {
-          const pct = Math.round((e.loaded / e.total) * 100);
-          setFiles(prev => prev.map(f =>
-            f.id === importedFile.id ? { ...f, progress: pct } : f
-          ));
-        }
-      };
-
-      xhr.onload = () => {
-        if (xhr.status === 200) {
-          const data = JSON.parse(xhr.responseText);
-          setFiles(prev => prev.map(f =>
-            f.id === importedFile.id
-              ? { ...f, status: 'done', progress: 100, result: data }
-              : f
-          ));
-
-          // Seedha project mein add karo
-          addImportedVideo({
-            id:           data.videoId || data.id,
-            url:          data.url,
-            thumbnailUrl: data.thumbnailUrl || '',
-            duration:     data.duration || 0,
-            format:       data.format || 'mp4',
-            quality:      data.quality || '1080p',
-            aspectRatio:  data.aspectRatio || '16:9',
-            fileSize:     data.fileSize || importedFile.file.size,
-            filename:     importedFile.file.name,
-          });
-
-          resolve();
-        } else {
-          const err = JSON.parse(xhr.responseText)?.error || xhr.statusText;
-          setFiles(prev => prev.map(f =>
-            f.id === importedFile.id ? { ...f, status: 'error', error: err } : f
-          ));
-          reject(new Error(err));
-        }
-      };
-
-      xhr.onerror = () => {
-        setFiles(prev => prev.map(f =>
-          f.id === importedFile.id ? { ...f, status: 'error', error: 'Network error' } : f
-        ));
-        reject(new Error('Network error'));
-      };
-
-      xhr.send(formData);
+    const form = new FormData();
+    form.append('file', importedFile.file);
+    const response = await authenticatedFetch(`${import.meta.env.VITE_API_URL || ''}/api/video/upload`, {
+      method: 'POST',
+      body: form,
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({})) as { error?: string };
+      throw new Error(error.error ?? 'Video upload fail ho gaya.');
+    }
+    const uploaded = await response.json() as { videoId: string; url: string; temporary: boolean; expiresAt?: string };
+    const ratio = metadata.width && metadata.height ? metadata.width / metadata.height : 16 / 9;
+    const data = {
+      videoId: uploaded.videoId,
+      url: `${import.meta.env.VITE_API_URL || ''}${uploaded.url}`,
+      thumbnailUrl: '',
+      duration: metadata.duration,
+      width: metadata.width,
+      height: metadata.height,
+      aspectRatio: ratio < 0.8 ? '9:16' : ratio < 1.15 ? '1:1' : '16:9',
+      quality: metadata.height >= 2160 ? '4k' : metadata.height >= 1080 ? '1080p' : '720p',
+      format: importedFile.file.name.split('.').pop()?.toLowerCase() || 'mp4',
+      fileSize: importedFile.file.size,
+      temporary: uploaded.temporary,
+      ...(uploaded.expiresAt ? { expiresAt: uploaded.expiresAt } : {}),
+    };
+    setFiles(prev => prev.map(f => f.id === importedFile.id ? { ...f, status: 'done', progress: 100, result: data } : f));
+    addImportedVideo({
+      id: data.videoId, url: data.url, thumbnailUrl: '', duration: data.duration,
+      format: data.format, quality: data.quality, aspectRatio: data.aspectRatio,
+      fileSize: data.fileSize, filename: importedFile.file.name,
+      temporary: data.temporary,
+      ...(data.expiresAt ? { expiresAt: data.expiresAt } : {}),
     });
   }
 
@@ -152,7 +139,12 @@ export function ImportVideoPanel() {
     // Upload valid files
     newFiles.filter(f => f.status === 'pending').forEach(f => {
       setFiles(prev => prev.map(x => x.id === f.id ? { ...x, status: 'uploading' } : x));
-      uploadFile(f).catch(() => {});
+      void importFile(f).catch(error => {
+        setFiles(prev => prev.map(x => x.id === f.id ? {
+          ...x, status: 'error', progress: 0,
+          error: error instanceof Error ? error.message : 'Video upload fail ho gaya.',
+        } : x));
+      });
     });
   }
 
@@ -175,7 +167,7 @@ export function ImportVideoPanel() {
           📥 Import Video
         </h3>
         <p style={{ margin: 0, fontSize: '12px', color: 'var(--vs-text-muted)' }}>
-          Existing videos seedha studio mein laao — koi AI nahi chahiye
+          Existing videos seedha studio mein laao — koi AI nahi chahiye · default 24 ghante baad auto-delete
         </p>
       </div>
 
@@ -199,13 +191,13 @@ export function ImportVideoPanel() {
           {isDragging ? '📂' : uploading ? '⏳' : '📥'}
         </div>
         <p style={{ margin: '0 0 5px', fontSize: '14px', fontWeight: 600, color: 'var(--vs-text-primary)' }}>
-          {isDragging ? 'Chhod do!' : uploading ? 'Upload ho raha hai...' : 'Videos yahan drop karo'}
+          {isDragging ? 'Chhod do!' : uploading ? 'Local import ho raha hai...' : 'Videos yahan drop karo'}
         </p>
         <p style={{ margin: '0 0 8px', fontSize: '12px', color: 'var(--vs-text-muted)' }}>
           Ya click karke select karo · Multiple files ek saath
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', flexWrap: 'wrap' }}>
-          {['MP4', 'MOV', 'WebM', 'AVI', 'MKV'].map(f => (
+          {['MP4', 'WebM'].map(f => (
             <span key={f} style={{ fontSize: '11px', padding: '2px 8px', background: 'var(--vs-bg-elevated)', border: '0.5px solid var(--vs-border)', borderRadius: '20px', color: 'var(--vs-text-muted)' }}>
               {f}
             </span>

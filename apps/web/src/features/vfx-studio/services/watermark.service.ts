@@ -3,6 +3,7 @@
 // ============================================================
 
 import { VIDEO_STUDIO_CONFIG } from '../constants/videoStudioConfig';
+import AuthService, { authenticatedFetch } from '../../../services/auth';
 
 const API_BASE = VIDEO_STUDIO_CONFIG.api.baseUrl;
 
@@ -29,10 +30,12 @@ class WatermarkService {
   async uploadLogo(file: File, onProgress?: (p: number) => void): Promise<{ logoId: string; url: string }> {
     const formData = new FormData();
     formData.append('logo', file);
+    const token = await AuthService.getValidToken();
 
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open('POST', `${API_BASE}/api/watermark/upload`);
+      if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
       xhr.upload.onprogress = e => {
         if (e.lengthComputable) onProgress?.(Math.round((e.loaded / e.total) * 100));
       };
@@ -52,7 +55,7 @@ class WatermarkService {
     videoId: string,
     opts: WatermarkOptions
   ): Promise<{ outputId: string; url: string }> {
-    const res = await fetch(`${API_BASE}/api/watermark/apply`, {
+    const res = await authenticatedFetch(`${API_BASE}/api/watermark/apply`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ videoId, ...opts }),

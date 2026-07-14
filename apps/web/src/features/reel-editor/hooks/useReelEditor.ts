@@ -46,6 +46,9 @@ export function useReelEditor() {
       }
       if (event.type === "error") setMessage(event.error.message);
     });
+    void engine.loadLatestDraft().then((restored) => {
+      if (restored?.clips.length) setMessage(`Restored ${restored.name} with ${restored.clips.length} local clip${restored.clips.length === 1 ? "" : "s"}.`);
+    }).catch(() => setMessage("Saved draft metadata was found, but its local video files could not be restored."));
     return unsubscribe;
   }, []);
 

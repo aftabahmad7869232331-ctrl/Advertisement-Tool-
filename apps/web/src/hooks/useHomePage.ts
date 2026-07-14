@@ -47,14 +47,14 @@ export const HOME_WHY_CHOOSE_ITEMS = [
 ];
 
 export const HOME_POPULAR_CATEGORIES = [
-  { name: "Business Promotion", count: "142 Templates", icon: "Briefcase" },
-  { name: "School Admission", count: "89 Templates", icon: "BookOpen" },
-  { name: "Restaurant", count: "115 Templates", icon: "CreditCard" },
-  { name: "Real Estate", count: "204 Templates", icon: "Layers" },
-  { name: "Healthcare", count: "73 Templates", icon: "Shield" },
-  { name: "Festival Offers", count: "96 Templates", icon: "Sparkles" },
-  { name: "Corporate", count: "158 Templates", icon: "BarChart3" },
-  { name: "Retail", count: "110 Templates", icon: "Image" }
+  { name: "Business Promotion", count: "142 Templates", icon: "Briefcase", templateCategory: "Business Promotion" },
+  { name: "School Admission", count: "89 Templates", icon: "BookOpen", templateCategory: "School Admission" },
+  { name: "Restaurant", count: "115 Templates", icon: "CreditCard", templateCategory: "Restaurant Menu" },
+  { name: "Real Estate", count: "204 Templates", icon: "Layers", templateCategory: "Real Estate" },
+  { name: "Healthcare", count: "73 Templates", icon: "Shield", templateCategory: "Healthcare" },
+  { name: "Festival Offers", count: "96 Templates", icon: "Sparkles", templateCategory: "Festival Offer" },
+  { name: "Corporate", count: "158 Templates", icon: "BarChart3", templateCategory: "Corporate Services" },
+  { name: "Retail", count: "110 Templates", icon: "Image", templateCategory: "Product Advertisement" }
 ];
 
 const PRE_BUILT_PROJECTS: HomeProjectItem[] = [

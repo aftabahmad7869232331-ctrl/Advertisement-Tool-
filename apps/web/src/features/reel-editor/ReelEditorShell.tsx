@@ -19,12 +19,7 @@ const tools: Array<{ label: ReelTool; icon: typeof Upload }> = [
   { label: "Publish", icon: Send },
 ];
 
-const demoClips = [
-  { name: "mountain-view.mp4", width: "22%", tone: "mountain" },
-  { name: "city-walk.mp4", width: "22%", tone: "city" },
-  { name: "beach-sunset.mp4", width: "22%", tone: "beach" },
-  { name: "friends-fun.mp4", width: "22%", tone: "friends" },
-];
+const supportedTools = new Set<ReelTool>(["Upload", "Media", "Trim", "Timeline", "VFX", "Text"]);
 
 interface ReelEditorShellProps {
   setActiveView: (view: ViewType) => void;
@@ -85,7 +80,7 @@ export function ReelEditorShell({ setActiveView }: ReelEditorShellProps) {
         <div className="reel-editor__actions">
           <button type="button" onClick={editor.saveDraft}><Save /> Save Draft</button>
           <button type="button" className="reel-editor__primary" onClick={() => editor.createExportJob("browser-preview")}>
-            <Upload /> Export
+            <Upload /> Export Project
           </button>
           <span className="reel-editor__render-badge"><span /> Local Editing · Cloud Optional</span>
         </div>
@@ -94,10 +89,11 @@ export function ReelEditorShell({ setActiveView }: ReelEditorShellProps) {
       <div className="reel-editor__main">
         <nav className="reel-editor__tools" aria-label="Reel editor tools">
           {tools.map(({ label, icon: Icon }) => (
-            <button key={label} type="button" title={label}
+            <button key={label} type="button"
               className={editor.activeTool === label ? "is-active" : ""}
               onClick={() => editor.selectTool(label)} aria-pressed={editor.activeTool === label}
-              disabled={editor.isBusy}>
+              disabled={editor.isBusy || !supportedTools.has(label)}
+              title={supportedTools.has(label) ? label : `${label}: processing module not installed`}>
               <Icon /><span>{label}</span>
             </button>
           ))}
@@ -172,9 +168,9 @@ export function ReelEditorShell({ setActiveView }: ReelEditorShellProps) {
           </PropertySection>
           <PropertySection title="Clip Info" icon={<Clock3 />} name="clip"
             open={openSections.includes("clip")} toggle={toggleSection}>
-            <dl><dt>Name</dt><dd>{editor.activeClip?.name ?? "demo-reel.mp4"}</dd>
-              <dt>Resolution</dt><dd>1080 × 1920</dd><dt>Duration</dt><dd>00:30</dd>
-              <dt>FPS</dt><dd>30</dd><dt>Size</dt><dd>{editor.activeClip ? `${(editor.activeClip.sizeBytes / 1048576).toFixed(1)} MB` : "24.8 MB"}</dd></dl>
+            <dl><dt>Name</dt><dd>{editor.activeClip?.name ?? "No clip imported"}</dd>
+              <dt>Resolution</dt><dd>{editor.activeClip ? "Source resolution" : "—"}</dd><dt>Duration</dt><dd>{editor.activeClip ? `${(editor.activeClip.trimEnd - editor.activeClip.trimStart).toFixed(2)}s` : "—"}</dd>
+              <dt>FPS</dt><dd>Source</dd><dt>Size</dt><dd>{editor.activeClip ? `${(editor.activeClip.sizeBytes / 1048576).toFixed(1)} MB` : "—"}</dd></dl>
           </PropertySection>
         </aside>
       </div>
@@ -205,20 +201,19 @@ export function ReelEditorShell({ setActiveView }: ReelEditorShellProps) {
             <div className="reel-editor__ruler">{["00:00","00:05","00:10","00:15","00:20","00:25","00:30"].map(t => <span key={t}>{t}</span>)}</div>
             <div className="reel-editor__playhead"><b>00:08.42</b></div>
             <div className="reel-editor__track video-track">{editor.project?.clips.length ? editor.project.clips.map((clip, index) =>
-              <div key={clip.id} className={demoClips[index % demoClips.length]?.tone ?? "city"}
-                style={{ width: `${Math.max(8, ((clip.trimEnd - clip.trimStart) / 30) * 100)}%` }}>{clip.name}<small>{(clip.trimEnd - clip.trimStart).toFixed(2)}s</small></div>) : demoClips.map((clip) =>
-              <div key={clip.name} className={clip.tone} style={{ width: clip.width }}>{clip.name}<small>00:04.00</small></div>)}</div>
-            <div className="reel-editor__track vfx-track"><div>✦ Color Grade</div><div>✦ Light Leak</div><div>✦ Motion Blur</div></div>
-            <div className="reel-editor__track text-track"><div>Adventure Awaits</div><div>Keep exploring. Never stop.</div></div>
-            <div className="reel-editor__track audio-track"><div><Waves /> upbeat-travel-music.mp3</div></div>
+              <div key={clip.id} className={index % 2 ? "city" : "mountain"}
+                style={{ width: `${Math.max(8, ((clip.trimEnd - clip.trimStart) / 30) * 100)}%` }}>{clip.name}<small>{(clip.trimEnd - clip.trimStart).toFixed(2)}s</small></div>) : <div className="reel-editor__empty-track">Import a video to begin</div>}</div>
+            <div className="reel-editor__track vfx-track">{editor.project?.effects.filter((effect) => effect.enabled).map((effect) => <div key={effect.id}>✦ {effect.type}</div>)}</div>
+            <div className="reel-editor__track text-track">{editor.project?.textOverlays.map((overlay) => <div key={overlay.id}>{overlay.text}</div>)}</div>
+            <div className="reel-editor__track audio-track">{editor.activeClip && <div><Waves /> Source audio</div>}</div>
           </div>
         </div>
       </section>
 
       <footer className="reel-editor__footer">
         <span>✓ Autosave <b>{editor.lastSavedAt}</b></span>
-        <span>▣ Backup after each completed page <b>Enabled</b></span>
-        <span>▤ Render Queue <b>{editor.renderJobs} jobs</b></span>
+        <span>▣ Draft storage <b>Browser local</b></span>
+        <span>▤ Project exports <b>{editor.renderJobs}</b></span>
         <span>◷ Project Version <b>v{editor.project?.version ?? 1}.0.0</b></span>
       </footer>
     </section>
@@ -235,4 +230,3 @@ function PropertySection({ title, icon, name, open, toggle, children }: {
     {open && <div className="reel-editor__property-body">{children}</div>}
   </section>;
 }
-

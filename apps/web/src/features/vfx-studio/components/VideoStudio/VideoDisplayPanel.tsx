@@ -2,14 +2,42 @@
 // VIDEO DISPLAY PANEL
 // ============================================================
 
-import React from 'react';
+import React, { useState } from 'react';
 import { VideoPreview } from './VideoPreview';
 import { LoadingSpinner } from '../Common/LoadingSpinner';
 import { useVideoStudio } from '../../hooks/useVideoStudio';
 import { formatFileSize } from '../../utils/fileValidator.util';
+import { videoGenerationService } from '../../services/videoGeneration.service';
 
 export function VideoDisplayPanel() {
-  const { selectedVideo, generationStatus, generationProgress, cancelGeneration } = useVideoStudio();
+  const { selectedVideo, project, setProject, generationStatus, generationProgress, cancelGeneration } = useVideoStudio();
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  async function keepVideo() {
+    if (!selectedVideo) return;
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      const result = await videoGenerationService.saveVideo(selectedVideo.id);
+      const { expiresAt: _expiresAt, ...savedVideo } = selectedVideo;
+      setProject({
+        ...project,
+        videos: project.videos.map(video => video.id === selectedVideo.id
+          ? {
+              ...savedVideo,
+              temporary: false,
+              ...(result.savedAt ? { savedAt: result.savedAt } : {}),
+            }
+          : video),
+        updatedAt: new Date(),
+      });
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'Video save nahi ho saka.');
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   const isGenerating = generationStatus === 'generating';
   const isError      = generationStatus === 'error';
@@ -97,6 +125,28 @@ export function VideoDisplayPanel() {
               <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--vs-text-primary)' }}>{value}</div>
             </div>
           ))}
+        </div>
+      )}
+
+      {selectedVideo?.temporary && (
+        <div style={{
+          padding: '12px 14px', borderRadius: '9px',
+          background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.35)',
+          color: 'var(--vs-text-secondary)', fontSize: '12px', lineHeight: 1.5,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+            <span>
+              Privacy mode: ye video temporary hai
+              {selectedVideo.expiresAt ? ` aur ${new Date(selectedVideo.expiresAt).toLocaleString('hi-IN')} ke baad delete hoga.` : ' aur auto-delete hoga.'}
+            </span>
+            <button onClick={keepVideo} disabled={isSaving} style={{
+              flexShrink: 0, padding: '8px 12px', border: 0, borderRadius: '7px', cursor: isSaving ? 'wait' : 'pointer',
+              background: '#6366f1', color: '#fff', fontSize: '12px', fontWeight: 600,
+            }}>
+              {isSaving ? 'Saving…' : 'Keep permanently'}
+            </button>
+          </div>
+          {saveError && <div style={{ marginTop: '6px', color: 'var(--vs-error)' }}>{saveError}</div>}
         </div>
       )}
     </div>

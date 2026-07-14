@@ -47,7 +47,8 @@ export const VIDEO_STUDIO_CONFIG = {
     maxRecentProjects: 10,
   },
   api: {
-    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+    // Empty by default so LAN clients use the current host and Vite's /api proxy.
+    baseUrl: import.meta.env.VITE_API_URL || '',
     timeout: 60000,
     retryAttempts: 3,
     retryDelayMs: 1000,

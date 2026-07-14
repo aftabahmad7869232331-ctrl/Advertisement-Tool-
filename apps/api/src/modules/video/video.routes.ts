@@ -23,6 +23,14 @@ import {
   InvalidProviderCredentialError,
   ProviderUnavailableError,
 } from '../../services/providers/types.js';
+import { isExpiredTemporaryMedia } from '../../services/mediaRetention.service.js';
+import {
+  estimateVideoGenerationCredits,
+  InsufficientCreditsError,
+  releaseReservedCredits,
+  reserveCredits,
+} from '../../services/creditLedger.service.js';
+import { resolveUserId } from '../../services/auth.service.js';
 
 const providerSchema = z.enum([
   'auto',
@@ -135,7 +143,7 @@ export async function videoRoutes(
     const input = parsed.data;
     const maxPrompts = Number(process.env.MAX_PROMPTS_PER_JOB ?? 10);
     if (input.prompts.length > maxPrompts) return reply.status(400).send({ status: 'error', error: 'Prompt count limit exceed hui.' });
-    const clientScope = request.ip;
+    const clientScope = resolveUserId(request);
     const rawIdempotencyKey = request.headers['idempotency-key'];
     const idempotencyKey = typeof rawIdempotencyKey === 'string' ? rawIdempotencyKey.trim() : undefined;
     if (idempotencyKey && !/^[A-Za-z0-9._:-]{8,128}$/.test(idempotencyKey)) {
@@ -162,6 +170,11 @@ export async function videoRoutes(
 
     const requestedProvider =
       input.provider ?? getConfiguredProvider();
+    const estimatedCredits = estimateVideoGenerationCredits({
+      durationSeconds: input.duration,
+      promptCount: promptTexts.length,
+      quality: input.quality,
+    });
 
     ProcessingJobModel.create({
       id: jobId,
@@ -176,6 +189,7 @@ export async function videoRoutes(
         aspectRatio: input.aspectRatio,
         language: input.language,
         requestedProvider,
+        estimatedCredits,
         ...(input.duration !== undefined ? { duration: input.duration } : {}),
         ...(input.seed !== undefined ? { seed: input.seed } : {}),
         ...(input.negativePrompt !== undefined ? { negativePrompt: input.negativePrompt } : {}),
@@ -184,6 +198,11 @@ export async function videoRoutes(
     if (idempotencyKey) saveIdempotency(clientScope, idempotencyKey, hash, jobId);
 
     try {
+      const creditReservation = reserveCredits({
+        userId: clientScope,
+        jobId,
+        credits: estimatedCredits,
+      });
       const shouldCheckLocalWorker =
         requestedProvider === 'auto' ||
         requestedProvider === 'local-wan';
@@ -282,6 +301,8 @@ export async function videoRoutes(
         provider: selection.provider,
         model: selection.model,
         credentialSource: selection.credentialSource,
+        estimatedCredits,
+        creditsRemaining: creditReservation.account.availableCredits,
       });
     } catch (error) {
       const message =
@@ -290,8 +311,11 @@ export async function videoRoutes(
           : 'AI provider selection ya dispatch fail ho gaya.';
 
       ProcessingJobModel.markError(jobId, message);
+      releaseReservedCredits(jobId, 'generation_dispatch_failed');
 
-      const statusCode = error instanceof InvalidProviderCredentialError
+      const statusCode = error instanceof InsufficientCreditsError
+        ? 402
+        : error instanceof InvalidProviderCredentialError
         ? 401
         : error instanceof ProviderUnavailableError
           ? 502
@@ -303,6 +327,9 @@ export async function videoRoutes(
         estimatedTime: 0,
         progress: 0,
         error: message,
+        ...(error instanceof InsufficientCreditsError
+          ? { requiredCredits: error.requiredCredits, availableCredits: error.availableCredits }
+          : {}),
       });
     }
   });
@@ -321,6 +348,9 @@ export async function videoRoutes(
         status: 'error',
         error: 'Video generation job nahi mila.',
       });
+    }
+    if (job.userId !== resolveUserId(request)) {
+      return reply.status(404).send({ status: 'error', error: 'Video generation job nahi mila.' });
     }
 
     const result = job.result;
@@ -351,6 +381,9 @@ export async function videoRoutes(
         height: video.height,
         fps: video.fps,
         codec: video.codec,
+        temporary: video.temporary,
+        expiresAt: video.expiresAt?.toISOString(),
+        savedAt: video.savedAt?.toISOString(),
       } : undefined,
       failedClips: Array.isArray(result?.failedClips)
         ? result.failedClips
@@ -362,11 +395,13 @@ export async function videoRoutes(
   app.post<{ Params: { jobId: string } }>('/api/video/jobs/:jobId/cancel', async (request, reply) => {
     const job = ProcessingJobModel.findById(request.params.jobId);
     if (!job) return reply.status(404).send({ status: 'error', error: 'Job nahi mila.' });
+    if (job.userId !== resolveUserId(request)) return reply.status(404).send({ status: 'error', error: 'Job nahi mila.' });
     if (['ready', 'failed', 'cancelled', 'timed_out'].includes(job.status)) {
       return { status: job.status, jobId: job.id, idempotent: true };
     }
     await cancelVideoGeneration(job.id);
     ProcessingJobModel.transition(job.id, 'cancelled', 'cancelled_by_user');
+    releaseReservedCredits(job.id, 'cancelled_by_user');
     return { status: 'cancelled', jobId: job.id };
   });
 
@@ -375,6 +410,9 @@ export async function videoRoutes(
     async (request, reply) => {
       const video = VideoModel.findById(request.params.videoId);
       if (!video?.storageKey) return reply.status(404).send({ status: 'error', error: 'Video nahi mila.' });
+      if (isExpiredTemporaryMedia(video)) {
+        return reply.status(410).send({ status: 'error', error: 'Temporary video expire ho chuka hai.' });
+      }
 
       try {
         const storage = getStorageProvider();

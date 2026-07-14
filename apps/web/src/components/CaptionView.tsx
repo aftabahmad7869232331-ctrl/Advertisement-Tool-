@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { copyText } from "../utils/copyText";
 import { 
   Languages, 
   Sparkles, 
@@ -43,7 +44,7 @@ export function CaptionView() {
   ]);
 
   const handleCopyText = (text: string, index: number | null) => {
-    navigator.clipboard.writeText(text);
+    void copyText(text);
     if (index === null) {
       setIsCopyingOriginal(true);
       setTimeout(() => setIsCopyingOriginal(false), 1500);

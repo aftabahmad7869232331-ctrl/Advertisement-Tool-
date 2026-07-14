@@ -3,6 +3,7 @@
 // ============================================================
 
 import { VIDEO_STUDIO_CONFIG } from '../constants/videoStudioConfig';
+import { authenticatedFetch } from '../../../services/auth';
 
 const API_BASE = VIDEO_STUDIO_CONFIG.api.baseUrl;
 
@@ -29,7 +30,7 @@ class LipSyncFrontendService {
     voiceId?: string;
     model?:   SyncLabsModel;
   }): Promise<{ jobId: string }> {
-    const res = await fetch(`${API_BASE}/api/lipsync/start`, {
+    const res = await authenticatedFetch(`${API_BASE}/api/lipsync/start`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify(opts),
@@ -72,7 +73,7 @@ class LipSyncFrontendService {
   }
 
   async pollStatus(jobId: string): Promise<LipSyncJobStatus> {
-    const res = await fetch(`${API_BASE}/api/lipsync/${jobId}`);
+    const res = await authenticatedFetch(`${API_BASE}/api/lipsync/${jobId}`);
     if (!res.ok) throw new Error('Status check failed');
     return res.json();
   }

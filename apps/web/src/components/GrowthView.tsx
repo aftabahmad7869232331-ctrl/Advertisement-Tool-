@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { workspaceApi } from "../services/workspaceApi";
+import { workspaceApi, type LocalActionRecord } from "../services/workspaceApi";
+import { downloadFile } from "../utils/downloadFile";
 import { 
   Sparkles, 
   Send, 
@@ -34,47 +35,115 @@ import {
 
 export function GrowthView() {
   const [activeCategory, setActiveCategory] = useState<"all" | "promo" | "print" | "branding" | "web" | "marketing">("all");
-  const [isPublishing, setIsPublishing] = useState(false);
-  const [publishProgress, setPublishProgress] = useState(0);
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [activityMode, setActivityMode] = useState<"queue" | "history">("queue");
+  const [activityRecords, setActivityRecords] = useState<LocalActionRecord[]>(() => workspaceApi.localActions("growth"));
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, action = "ui-action", payload: Record<string, unknown> = {}) => {
     setToastMessage(msg);
-    void workspaceApi.action("growth", "ui-action", { message: msg }).catch(() => undefined);
+    void workspaceApi.action("growth", action, { ...payload, message: msg }).catch(() => undefined);
+    setActivityRecords(workspaceApi.localActions("growth"));
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const handlePublishAll = () => {
-    setIsPublishing(true);
-    setPublishProgress(0);
-    const interval = setInterval(() => {
-      setPublishProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setIsPublishing(false);
-            setPublishProgress(0);
-            showToast("Campaign publish request saved to the workspace queue.");
-          }, 600);
-          return 100;
-        }
-        return prev + 20;
+  const openActivity = (mode: "queue" | "history") => {
+    setActivityMode(mode);
+    setActivityRecords(workspaceApi.localActions("growth"));
+    window.setTimeout(() => document.getElementById("growth-activity")?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
+  };
+
+  const handleWorkspaceControl = (action: string) => {
+    if (action === "Publishing Queue") {
+      openActivity("queue");
+      return;
+    }
+    if (action === "Promotion History") {
+      openActivity("history");
+      return;
+    }
+    if (action === "Campaign Manager") {
+      setActiveCategory("marketing");
+      showToast("Campaign Manager opened in the Marketing workspace.", "campaign-manager-opened");
+      return;
+    }
+
+    const scheduledFor = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    showToast("Promotion scheduled locally for one hour from now.", "promotion-scheduled", {
+      channel: selectedChannel ?? "all-connected",
+      scheduledFor,
+    });
+    openActivity("queue");
+  };
+
+  const handleBusinessTool = async (toolName: string) => {
+    const timestamp = new Date().toISOString();
+
+    if (toolName === "QR Generator") {
+      const value = window.prompt("QR code ke liye URL ya text enter karein:", window.location.origin);
+      if (!value?.trim()) return;
+      const { default: QRCode } = await import("qrcode");
+      const dataUrl = await QRCode.toDataURL(value.trim(), {
+        width: 1024,
+        margin: 2,
+        color: { dark: "#090909", light: "#ffffff" },
+        errorCorrectionLevel: "H",
       });
-    }, 300);
+      const anchor = document.createElement("a");
+      anchor.href = dataUrl;
+      anchor.download = "brick-maker-qr.png";
+      anchor.click();
+      showToast("QR code generated and downloaded locally.", "business-tool-generated", { tool: toolName, value });
+      return;
+    }
+
+    if (toolName === "Barcode Generator") {
+      const value = window.prompt("Barcode ke liye product code enter karein:", "BRICK-2026-001");
+      if (!value?.trim()) return;
+      const { default: JsBarcode } = await import("jsbarcode");
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      JsBarcode(svg, value.trim(), { format: "CODE128", displayValue: true, background: "#ffffff", lineColor: "#090909", margin: 24 });
+      downloadFile("brick-maker-barcode.svg", new XMLSerializer().serializeToString(svg), "image/svg+xml;charset=utf-8");
+      showToast("CODE128 barcode generated and downloaded locally.", "business-tool-generated", { tool: toolName, value });
+      return;
+    }
+
+    if (toolName === "Digital Visiting Card") {
+      downloadFile("brick-maker-contact.vcf", [
+        "BEGIN:VCARD", "VERSION:3.0", "FN:Brick-Maker Studio", "ORG:Brick-Maker Studio",
+        "TITLE:Creative Business Workspace", "EMAIL:contact@brickmaker.studio",
+        `URL:${window.location.origin}`, "END:VCARD", "",
+      ].join("\r\n"), "text/vcard;charset=utf-8");
+    } else if (toolName === "Invoice Generator") {
+      downloadFile("invoice-template.csv", "Invoice ID,Date,Customer,Description,Quantity,Unit Price,Tax,Total,Status\nINV-NEW,,,,1,0,0,0,Draft\n", "text/csv;charset=utf-8");
+    } else if (toolName === "Business Profile") {
+      downloadFile("business-profile.json", JSON.stringify({
+        businessName: "Brick-Maker Studio", industry: "", email: "", phone: "", website: window.location.origin,
+        address: "", description: "", updatedAt: timestamp,
+      }, null, 2), "application/json;charset=utf-8");
+    } else if (toolName === "Business Documents") {
+      downloadFile("business-documents-checklist.md", "# Business Documents Checklist\n\n- [ ] Business registration\n- [ ] Tax registration\n- [ ] Brand guidelines\n- [ ] Product catalogue\n- [ ] Price list\n- [ ] Terms and conditions\n- [ ] Privacy policy\n- [ ] Invoice template\n");
+    } else if (toolName === "Marketing Reports") {
+      const rows = workspaceApi.localActions("growth").map((item) => [item.createdAt, item.action, item.synced ? "synced" : "local"]);
+      downloadFile("growth-activity-report.csv", ["created_at,action,status", ...rows.map((row) => row.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(","))].join("\n"), "text/csv;charset=utf-8");
+    } else {
+      downloadFile("brick-maker-download-center.json", JSON.stringify({ exportedAt: timestamp, actions: workspaceApi.localActions() }, null, 2), "application/json;charset=utf-8");
+    }
+
+    showToast(`${toolName} file generated and downloaded locally.`, "business-tool-generated", { tool: toolName });
+  };
+
+  const handlePublishAll = () => {
+    showToast("Promotion saved to the local queue. Connect a platform before publishing externally.", "campaign-publish-queued", {
+      channel: selectedChannel ?? "unassigned",
+    });
+    openActivity("queue");
   };
 
   // Connected Channel Categories (no platform names as strictly forbidden)
-  const connectedChannels = [
-    { id: "social", name: "Social Channels", status: "Active", accounts: 12, queue: 4, reach: "142.5K", glow: "rgba(248,180,0,0.15)" },
-    { id: "video", name: "Video Channels", status: "Active", accounts: 5, queue: 2, reach: "98.2K", glow: "rgba(255,152,0,0.15)" },
-    { id: "msg", name: "Messaging Channels", status: "Active", accounts: 8, queue: 0, reach: "45.0K", glow: "rgba(16,185,129,0.15)" },
-    { id: "listing", name: "Business Listings", status: "Active", accounts: 14, queue: 1, reach: "18.4K", glow: "rgba(59,130,246,0.15)" },
-    { id: "web", name: "Website Channels", status: "Active", accounts: 3, queue: 0, reach: "320.1K", glow: "rgba(139,92,246,0.15)" },
-    { id: "community", name: "Community Channels", status: "Pending", accounts: 6, queue: 0, reach: "12.7K", glow: "rgba(236,72,153,0.15)" },
-    { id: "email", name: "Email Channels", status: "Active", accounts: 4, queue: 8, reach: "55.8K", glow: "rgba(244,63,94,0.15)" },
-    { id: "custom", name: "Custom Channels", status: "Active", accounts: 2, queue: 0, reach: "8.1K", glow: "rgba(100,116,139,0.15)" }
-  ];
+  const connectedChannels = ["Social Channels", "Video Channels", "Messaging Channels", "Business Listings", "Website Channels", "Community Channels", "Email Channels", "Custom Channels"].map((name, index) => ({
+    id: `channel-${index + 1}`, name, status: "Not connected", accounts: 0, queue: 0, reach: "—", glow: "rgba(248,180,0,0.15)",
+  }));
 
   // Printing Service Products
   const printServices = [
@@ -224,36 +293,19 @@ export function GrowthView() {
 
                 <div className="flex gap-2 w-full sm:w-auto">
                   <button 
-                    onClick={() => showToast("Channel refresh request saved. Connectors will run when configured.")}
+                    onClick={() => showToast("Connector setup request saved. Platforms can be authorized from Admin Settings.", "connector-setup-requested")}
                     className="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-[10px] tracking-wider uppercase transition-all cursor-pointer border border-white/5"
                   >
                     Connect Platforms
                   </button>
                   <button 
                     onClick={handlePublishAll}
-                    disabled={isPublishing}
-                    className="flex-1 sm:flex-none px-4 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 text-black font-black text-[10px] tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(248,180,0,0.2)] disabled:opacity-50 cursor-pointer"
+                    className="flex-1 sm:flex-none px-4 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 text-black font-black text-[10px] tracking-wider uppercase transition-all shadow-[0_0_15px_rgba(248,180,0,0.2)] cursor-pointer"
                   >
-                    {isPublishing ? "Publishing..." : "Publish Now"}
+                    Queue Promotion
                   </button>
                 </div>
               </div>
-
-              {/* Progress Bar for Bulk Posting */}
-              {isPublishing && (
-                <div className="mb-6 p-4 rounded-xl bg-black border border-amber-500/10 animate-pulse">
-                  <div className="flex justify-between text-[10px] mb-2">
-                    <span className="text-amber-400 font-bold uppercase tracking-wider">Syncing Outbound Streams</span>
-                    <span className="font-extrabold text-white">{publishProgress}%</span>
-                  </div>
-                  <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-amber-500 transition-all duration-300"
-                      style={{ width: `${publishProgress}%` }}
-                    />
-                  </div>
-                </div>
-              )}
 
               {/* Connected Channels Grid (No social media names allowed!) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -269,7 +321,7 @@ export function GrowthView() {
                   >
                     {/* Active Status indicator */}
                     <div className="absolute top-4 right-4 flex items-center gap-1.5">
-                      <span className={`w-2 h-2 rounded-full ${chan.status === "Active" ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.4)]" : "bg-pink-400 animate-pulse"}`} />
+                      <span className="w-2 h-2 rounded-full bg-gray-600" />
                       <span className="text-[8px] font-black uppercase text-gray-500">{chan.status}</span>
                     </div>
 
@@ -302,7 +354,7 @@ export function GrowthView() {
                 ].map((action, idx) => (
                   <button
                     key={idx}
-                    onClick={() => showToast(`${action} task saved to the workspace.`)}
+                    onClick={() => handleWorkspaceControl(action)}
                     className="p-2.5 rounded-lg bg-black text-[9px] font-extrabold uppercase tracking-widest text-gray-400 hover:text-white border border-white/5 hover:border-amber-500/20 transition-all cursor-pointer text-center"
                   >
                     {action}
@@ -355,7 +407,7 @@ export function GrowthView() {
                     <div className="mt-4 pt-2 border-t border-white/5 flex items-center justify-between text-[9px]">
                       <span className="text-gray-600 uppercase font-bold">Industrial Press</span>
                       <button 
-                        onClick={() => showToast(`Print quote request saved for ${srv.name}.`)}
+                        onClick={() => showToast(`Print quote request saved for ${srv.name}.`, "print-quote-requested", { service: srv.name, price: srv.price, speed: srv.speed })}
                         className="text-amber-500 hover:text-amber-400 font-black tracking-widest uppercase flex items-center gap-0.5 cursor-pointer"
                       >
                         Order Hard Copy
@@ -401,7 +453,7 @@ export function GrowthView() {
                       <h4 className="text-xs font-black text-white uppercase tracking-wider">{srv.name}</h4>
                       <p className="text-[10px] text-gray-500 leading-relaxed font-light">{srv.desc}</p>
                       <button 
-                        onClick={() => showToast(`Consultation request saved for ${srv.name}.`)}
+                        onClick={() => showToast(`Consultation request saved for ${srv.name}.`, "branding-service-requested", { service: srv.name })}
                         className="text-[9px] text-amber-500 hover:underline pt-1.5 block font-bold cursor-pointer"
                       >
                         Launch Service Setup
@@ -446,7 +498,7 @@ export function GrowthView() {
                       <h4 className="text-xs font-black text-white uppercase tracking-wider">{srv.name}</h4>
                       <p className="text-[10px] text-gray-500 leading-relaxed font-light">{srv.desc}</p>
                       <button 
-                        onClick={() => showToast(`Website service request saved for ${srv.name}.`)}
+                        onClick={() => showToast(`Website service request saved for ${srv.name}.`, "website-service-requested", { service: srv.name })}
                         className="text-[9px] text-amber-500 hover:underline pt-1.5 block font-bold cursor-pointer"
                       >
                         Deploy Live Node
@@ -491,7 +543,7 @@ export function GrowthView() {
                       <h4 className="text-xs font-black text-white uppercase tracking-wider">{srv.name}</h4>
                       <p className="text-[10px] text-gray-500 leading-relaxed font-light">{srv.desc}</p>
                       <button 
-                        onClick={() => showToast(`Analytics task saved for ${srv.name}.`)}
+                        onClick={() => showToast(`Strategy task saved for ${srv.name}.`, "marketing-strategy-scheduled", { service: srv.name })}
                         className="text-[9px] text-amber-500 hover:underline pt-1.5 block font-bold cursor-pointer"
                       >
                         Schedule Strategy
@@ -521,7 +573,7 @@ export function GrowthView() {
             <div className="pt-2 border-t border-white/5 flex items-center justify-between">
               <span className="text-[8px] font-mono text-gray-600">Secure AES-256</span>
               <button 
-                onClick={() => showToast("Enterprise access request saved for administrator review.")}
+                onClick={() => showToast("Enterprise access request saved for administrator review.", "admin-access-requested")}
                 className="text-[9px] font-bold text-amber-400 hover:underline cursor-pointer"
               >
                 Configure Settings →
@@ -538,7 +590,7 @@ export function GrowthView() {
               {businessTools.map((tool, idx) => (
                 <button
                   key={idx}
-                  onClick={() => showToast(`${tool.name} task saved. No paid service was called.`)}
+                  onClick={() => { void handleBusinessTool(tool.name); }}
                   className="p-3 rounded-lg bg-zinc-950 border border-white/5 hover:border-amber-500/20 text-[#EAEAEA] hover:text-amber-400 transition-all flex items-center gap-2.5 cursor-pointer text-left group"
                 >
                   <span className="text-amber-500 group-hover:scale-110 transition-transform">
@@ -553,68 +605,58 @@ export function GrowthView() {
           </div>
 
           {/* C. CAMPAIGN REAL-TIME STATUS & QUEUE */}
-          <div className="p-5 rounded-xl border border-white/5 bg-black/40 text-left space-y-4">
+          <div id="growth-activity" className="p-5 rounded-xl border border-white/5 bg-black/40 text-left space-y-4 scroll-mt-28">
             <div className="flex justify-between items-center">
               <h4 className="text-xs font-black text-white uppercase tracking-widest">
                 Outbound Activity
               </h4>
-              <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 text-[8px] font-mono border border-amber-500/10">
-                100% HEALTH
-              </span>
+              <div className="flex gap-1">
+                <button type="button" onClick={() => openActivity("queue")} className={`px-2 py-1 rounded text-[8px] font-bold uppercase ${activityMode === "queue" ? "bg-amber-500 text-black" : "bg-white/5 text-gray-400"}`}>Queue</button>
+                <button type="button" onClick={() => openActivity("history")} className={`px-2 py-1 rounded text-[8px] font-bold uppercase ${activityMode === "history" ? "bg-amber-500 text-black" : "bg-white/5 text-gray-400"}`}>History</button>
+              </div>
             </div>
 
             <div className="space-y-3">
-              {[
-                { title: "Metropolitan Billboard Flyer", category: "Social Channels", time: "In Queue (14 mins left)" },
-                { title: "Volcanic Stone Brochure Pack", category: "Social Channels", time: "Published 2h ago" },
-                { title: "Gold Masonry Presentation", category: "Email Channels", time: "Draft Saved" }
-              ].map((item, idx) => (
-                <div key={idx} className="p-3 rounded-lg bg-zinc-950/80 border border-white/5 text-[10px] space-y-1">
+              {(activityMode === "queue" ? activityRecords.filter((item) => !item.synced) : activityRecords).slice(0, 8).map((item) => {
+                const payload = item.payload && typeof item.payload === "object" ? item.payload as Record<string, unknown> : {};
+                return (
+                <div key={item.id} className="p-3 rounded-lg bg-zinc-950/80 border border-white/5 text-[10px] space-y-1">
                   <div className="flex justify-between font-bold text-gray-200">
-                    <span className="truncate max-w-[150px]">{item.title}</span>
-                    <span className="text-amber-400 text-[8px] font-mono">{item.category}</span>
+                    <span className="truncate max-w-[165px]">{String(payload.message ?? item.action)}</span>
+                    <span className={`text-[8px] font-mono ${item.synced ? "text-emerald-400" : "text-amber-400"}`}>{item.synced ? "SYNCED" : "LOCAL"}</span>
                   </div>
                   <div className="flex justify-between text-[9px] text-gray-500">
-                    <span>Campaign Asset ID #{4800 + idx}</span>
-                    <span>{item.time}</span>
+                    <span className="truncate max-w-[130px]">{item.action.replaceAll("-", " ")}</span>
+                    <span>{new Date(item.createdAt).toLocaleString()}</span>
                   </div>
                 </div>
-              ))}
+              );})}
+              {(activityMode === "queue" ? activityRecords.filter((item) => !item.synced) : activityRecords).length === 0 && (
+                <div className="p-4 rounded-lg border border-dashed border-white/10 text-[10px] text-gray-500 text-center">
+                  {activityMode === "queue" ? "No pending local tasks." : "No growth activity recorded yet."}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* D. LIVE ANALYTICS MINICHART */}
+          {/* D. LOCAL ACTIVITY METRICS */}
           <div className="p-5 rounded-xl border border-white/5 bg-black/60 text-left space-y-3.5">
             <h4 className="text-xs font-black text-white uppercase tracking-widest border-b border-white/5 pb-2.5">
-              Promotion Reach Analytics
+              Local Promotion Activity
             </h4>
             
             <div className="grid grid-cols-2 gap-2 text-center">
               <div className="bg-zinc-950 p-2.5 rounded-lg border border-white/5">
-                <span className="block text-lg font-black text-white">482.5K</span>
-                <span className="block text-[8px] text-gray-500 uppercase tracking-widest">Total Impressions</span>
+                <span className="block text-lg font-black text-white">{activityRecords.length}</span>
+                <span className="block text-[8px] text-gray-500 uppercase tracking-widest">Recorded Actions</span>
               </div>
               <div className="bg-zinc-950 p-2.5 rounded-lg border border-white/5">
-                <span className="block text-lg font-black text-emerald-400">+14.2%</span>
-                <span className="block text-[8px] text-gray-500 uppercase tracking-widest">Weekly Reach</span>
+                <span className="block text-lg font-black text-amber-400">{activityRecords.filter((item) => !item.synced).length}</span>
+                <span className="block text-[8px] text-gray-500 uppercase tracking-widest">Pending Locally</span>
               </div>
             </div>
 
-            {/* Simulated Micro Bar Chart */}
-            <div className="h-10 flex items-end gap-1 px-1 pt-2">
-              {[30, 45, 35, 60, 75, 50, 90, 85, 100].map((h, i) => (
-                <div 
-                  key={i} 
-                  className="flex-1 bg-[#F8B400] rounded-sm group relative"
-                  style={{ height: `${h}%`, opacity: 0.3 + (h/100)*0.7 }}
-                >
-                  {/* Tooltip on hover */}
-                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 bg-black border border-white/10 px-1 py-0.5 rounded text-[8px] text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none mb-1">
-                    Day {i+1}: {h*10}K
-                  </span>
-                </div>
-              ))}
-            </div>
+            <p className="text-[9px] text-gray-500">External reach and impression analytics will appear only after a publishing connector is configured.</p>
           </div>
 
         </div>

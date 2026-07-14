@@ -9,6 +9,7 @@ import type {
   ApiResponse, AsyncResult, OAuthProvider, Permission
 } from '../types/advanced.types';
 import { getConfig, getApiUrl, is2FAEnabled } from '../config/wan21.config';
+import { createSecureId } from '../utils/createId';
 
 // ============================================================
 // 🗄️  TOKEN STORAGE (internal)
@@ -93,6 +94,50 @@ class SessionManager {
 
 const AuthService = {
 
+  async register(email: string, password: string): AsyncResult<AuthToken> {
+    try {
+      const res = await fetch(`${getApiUrl('auth')}/register`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data: ApiResponse<AuthToken> = await res.json();
+      if (data.success && data.data) {
+        TokenStorage.save(data.data);
+        await this._loadAndSaveSession();
+      }
+      return data;
+    } catch (err) {
+      return this._networkError<AuthToken>(err);
+    }
+  },
+
+  async requestPasswordReset(email: string): AsyncResult<{ message: string }> {
+    try {
+      const res = await fetch(`${getApiUrl('auth')}/forgot-password`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }),
+      });
+      return await res.json();
+    } catch (err) { return this._networkError<{ message: string }>(err); }
+  },
+
+  async resetPassword(token: string, password: string): AsyncResult<{ message: string }> {
+    try {
+      const res = await fetch(`${getApiUrl('auth')}/reset-password`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, password }),
+      });
+      return await res.json();
+    } catch (err) { return this._networkError<{ message: string }>(err); }
+  },
+
+  async verifyEmail(token: string): AsyncResult<User> {
+    try {
+      const res = await fetch(`${getApiUrl('auth')}/verify-email`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }),
+      });
+      return await res.json();
+    } catch (err) { return this._networkError<User>(err); }
+  },
+
   // ----------------------------------------------------------
   // 1️⃣  EMAIL / PASSWORD LOGIN
   // ----------------------------------------------------------
@@ -134,8 +179,8 @@ const AuthService = {
     const config = getConfig().auth.providers[socialProvider];
     if (!config?.enabled) throw new Error(`OAuth provider "${provider}" is not enabled`);
 
-    const state = crypto.randomUUID();
-    const nonce = crypto.randomUUID();
+    const state = createSecureId();
+    const nonce = createSecureId();
     sessionStorage.setItem('oauth_state', state);
     sessionStorage.setItem('oauth_nonce', nonce);
     sessionStorage.setItem('oauth_provider', provider);
@@ -397,4 +442,11 @@ const AuthService = {
 
 export default AuthService;
 export { TokenStorage, SessionManager };
+
+export async function authenticatedFetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
+  const token = await AuthService.getValidToken();
+  const headers = new Headers(init.headers);
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+  return fetch(input, { ...init, headers });
+}
 

@@ -8,6 +8,8 @@ import { voiceGenerationService } from '../services/voiceGeneration.service';
 import { SAMPLE_VOICES, PREVIEW_TEXT_SAMPLES } from '../constants/voiceSettings';
 import type { Voice, VoiceSettings, ClonedVoice } from '../types/voice.types';
 
+const VOICE_CLONING_AVAILABLE = false;
+
 function clonedToVoice(cv: ClonedVoice): Voice {
   return {
     id: cv.providerVoiceId,
@@ -32,6 +34,7 @@ export function useVoiceLab() {
   const prevLanguageRef = useRef(selectedLanguage);
 
   const refreshClonedVoices = useCallback(async () => {
+    if (!VOICE_CLONING_AVAILABLE) return;
     try {
       const list = await voiceGenerationService.listClonedVoices();
       setClonedVoices(list);
@@ -43,6 +46,10 @@ export function useVoiceLab() {
   useEffect(() => { refreshClonedVoices(); }, [refreshClonedVoices]);
 
   const cloneVoice = useCallback(async (name: string, sampleFiles: File[]) => {
+    if (!VOICE_CLONING_AVAILABLE) {
+      setCloneError('Voice cloning model/provider abhi configured nahi hai.');
+      return;
+    }
     setCloning(true); setCloneError(null);
     try {
       await voiceGenerationService.cloneVoice(name, sampleFiles);
@@ -156,6 +163,7 @@ export function useVoiceLab() {
     cloneError,
     cloneVoice,
     deleteClonedVoice,
+    voiceCloningAvailable: VOICE_CLONING_AVAILABLE,
   };
 }
 

@@ -11,6 +11,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { distributionService, PLATFORMS, type Platform, type PublishRecord } from '../../services/distribution.service';
+import { copyText } from '../../../../utils/copyText';
 
 interface PublishPanelProps {
   videoId:   string | null;
@@ -217,7 +218,7 @@ export function PublishPanel({ videoId, videoIds = [], videoTitle = '', aspectRa
               <p style={{ margin: '0 0 6px', fontSize: '11px', color: 'var(--vs-text-muted)' }}>Share Link:</p>
               <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                 <code style={{ flex: 1, fontSize: '11px', color: '#6366f1', wordBreak: 'break-all' }}>{shareUrl}</code>
-                <button onClick={() => navigator.clipboard.writeText(shareUrl)}
+                <button onClick={() => { void copyText(shareUrl); }}
                   style={{ padding: '5px 8px', fontSize: '11px', background: 'rgba(99,102,241,0.1)', border: '1px solid #6366f1', borderRadius: '5px', color: '#6366f1', cursor: 'pointer', flexShrink: 0 }}>
                   Copy
                 </button>

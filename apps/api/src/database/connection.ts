@@ -49,11 +49,20 @@ export function initializeDatabase(): void {
     ['sha256', 'TEXT'],
     ['file_size_bytes', 'INTEGER'],
     ['duration_seconds', 'REAL'],
+    ['is_temporary', 'INTEGER NOT NULL DEFAULT 0'],
+    ['expires_at', 'TEXT'],
+    ['saved_at', 'TEXT'],
   ] as const;
   for (const [name, type] of additions) {
     if (!existing.has(name)) db.exec(`ALTER TABLE videos ADD COLUMN ${name} ${type}`);
   }
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_videos_unique_job ON videos(job_id) WHERE job_id IS NOT NULL;');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_videos_expiry ON videos(is_temporary, expires_at);');
+
+  const userColumns = db.prepare('PRAGMA table_info(users)').all() as Array<{ name: string }>;
+  if (!userColumns.some((column) => column.name === 'email_verified_at')) {
+    db.exec('ALTER TABLE users ADD COLUMN email_verified_at TEXT');
+  }
 
   initialized = true;
 

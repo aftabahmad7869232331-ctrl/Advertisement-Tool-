@@ -6,28 +6,22 @@ import React from 'react';
 import { VideoStudioProvider } from '../../context/VideoStudioProvider';
 import { PromptInputPanel } from './PromptInputPanel';
 import { VideoDisplayPanel } from './VideoDisplayPanel';
-import { VideoEditPanel } from './VideoEditPanel';
-import { BackgroundRemovalPanel } from './BackgroundRemovalPanel';
-import { WatermarkPanel } from './WatermarkPanel';
-import { MusicPanel } from './MusicPanel';
 import { TemplatePanel } from './TemplatePanel';
-import { VideoDropzone } from './VideoDropzone';
-import { LipSyncPanel } from './LipSyncPanel';
-import { AutoDubPanel } from './AutoDubPanel';
 import { GenerationEstimator } from './GenerationEstimator';
+import { ImportVideoPanel } from './ImportVideoPanel';
+import { Navbar } from './Navbar';
+import { AnalyticsDashboard } from './AnalyticsDashboard';
+import { AutoDubPanel } from './AutoDubPanel';
+import { BackgroundRemovalPanel } from './BackgroundRemovalPanel';
+import { CaptionEditor } from './CaptionEditor';
+import { ExportPanel } from './ExportPanel';
+import { MusicPanel } from './MusicPanel';
 import { TimelineEditor } from './TimelineEditor';
 import { TitlesPanel } from './TitlesPanel';
 import { VFXPanel } from './VFXPanel';
-import { AIVFXPanel } from './AIVFXPanel';
-import { ProStudioPanel } from './ProStudioPanel';
-import { AnalyticsDashboard } from './AnalyticsDashboard';
-import { PublishPanel } from './PublishPanel';
-import { ImportVideoPanel } from './ImportVideoPanel';
-import { SettingsPanel } from './SettingsPanel';
+import { VideoEditPanel } from './VideoEditPanel';
 import { VoiceLab } from './VoiceLab';
-import { CaptionEditor } from './CaptionEditor';
-import { workspaceApi } from '../../../../services/workspaceApi';
-import { Navbar } from './Navbar';
+import { WatermarkPanel } from './WatermarkPanel';
 import { Tabs } from '../Common/Tabs';
 import { useVideoStudio } from '../../hooks/useVideoStudio';
 import styles from '../../styles/VideoStudio.module.css';
@@ -35,21 +29,21 @@ import '../../styles/videoStudio.variables.css';
 import '../../styles/animations.css';
 
 function VideoStudioInner() {
-  const { activeTab, setActiveTab, startGeneration, canGenerate, generationStatus, generationProgress, generationError, generationFailedClips, validPromptCount, activeTemplate, project, setProject } = useVideoStudio();
-  const selectedVideo = project.videos.find(v => v.id === project.selectedVideoId) ?? project.videos[project.videos.length - 1];
+  const { activeTab, setActiveTab, startGeneration, canGenerate, generationStatus, generationProgress, generationError, generationFailedClips, validPromptCount, activeTemplate, selectedVideo, addImportedVideo } = useVideoStudio();
 
-  const applyOutput = (operation: string, url: string) => {
-    if (selectedVideo) {
-      setProject({
-        ...project,
-        videos: project.videos.map((video) => video.id === selectedVideo.id ? { ...video, url, status: 'ready' } : video),
-        selectedVideoId: selectedVideo.id,
-        updatedAt: new Date(),
-      });
-    }
-    void workspaceApi.action('video-studio', `${operation}-completed`, {
-      videoId: selectedVideo?.id ?? null,
-      outputUrl: url,
+  const registerProcessedVideo = (url: string, label: string) => {
+    if (!selectedVideo) return;
+    const id = /\/api\/videos\/([^/]+)\/content/.exec(url)?.[1] ?? `processed-${Date.now()}`;
+    addImportedVideo({
+      id,
+      url,
+      thumbnailUrl: selectedVideo.thumbnailUrl ?? '',
+      duration: selectedVideo.duration,
+      format: 'mp4',
+      quality: selectedVideo.quality,
+      aspectRatio: selectedVideo.aspectRatio,
+      fileSize: 0,
+      filename: label,
     });
   };
 
@@ -75,6 +69,7 @@ function VideoStudioInner() {
     { id: 'music',      label: 'Music',      icon: '🎵' },
     { id: 'export',     label: 'Export',     icon: '⬇️' },
   ];
+  const availableTabs = new Set(['prompts', 'import', 'template', 'timeline', 'titles', 'vfx', 'analytics', 'dub', 'voice', 'captions', 'bgremove', 'watermark', 'music', 'export']);
 
   return (
     <div className={styles.studio}>
@@ -98,79 +93,30 @@ function VideoStudioInner() {
           />
 
           <div style={{ background: 'var(--vs-bg-card)', border: '1px solid var(--vs-border)', borderRadius: 'var(--vs-radius-lg)', padding: '20px', flex: 1 }}>
+            {!availableTabs.has(activeTab) && (
+              <div role="status" style={{ padding: '18px', border: '1px solid rgba(245,158,11,.25)', borderRadius: '12px', background: 'rgba(245,158,11,.06)' }}>
+                <h3 style={{ margin: '0 0 8px', color: 'var(--vs-text-primary)', fontSize: '14px' }}>Module not installed</h3>
+                <p style={{ margin: 0, color: 'var(--vs-text-muted)', fontSize: '12px', lineHeight: 1.6 }}>
+                  This control needs its matching local processing engine or server route. It is intentionally paused so the studio never shows fake progress or success.
+                </p>
+              </div>
+            )}
+            {availableTabs.has(activeTab) && <>
             {activeTab === 'prompts'    && <PromptInputPanel />}
             {activeTab === 'import'     && <ImportVideoPanel />}
             {activeTab === 'template'   && <TemplatePanel />}
             {activeTab === 'timeline'   && <TimelineEditor />}
-            {activeTab === 'titles'     && (
-              <TitlesPanel
-                videoId={selectedVideo?.id ?? null}
-                videoDuration={selectedVideo?.duration ?? 10}
-                onApplied={url => applyOutput('titles', url)}
-              />
-            )}
-            {activeTab === 'vfx'       && (
-              <VFXPanel
-                videoId={selectedVideo?.id ?? null}
-                onApplied={url => applyOutput('vfx', url)}
-              />
-            )}
-            {activeTab === 'ai-vfx'   && (
-              <AIVFXPanel
-                videoId={selectedVideo?.id ?? null}
-                mainScript={project.prompts.map(p => p.text).join(' ')}
-                onBRollReady={clips => { void workspaceApi.action('video-studio', 'b-roll-ready', { clips }); }}
-                onStyleDone={url => applyOutput('style-transfer', url)}
-                onBGDone={url => applyOutput('background', url)}
-              />
-            )}
-            {activeTab === 'pro'      && (
-              <ProStudioPanel
-                videoId={selectedVideo?.id ?? null}
-                videoIds={project.videos.map(v => v.id)}
-                onDone={url => applyOutput('pro-studio', url)}
-              />
-            )}
-            {activeTab === 'analytics' && <AnalyticsDashboard />}
-            {activeTab === 'publish'   && (
-              <PublishPanel
-                videoId={selectedVideo?.id ?? null}
-                videoIds={project.videos.map(v => v.id)}
-                videoTitle={project.name}
-                aspectRatio={activeTemplate?.aspectRatio ?? '16:9'}
-              />
-            )}
-            {activeTab === 'settings'  && <SettingsPanel />}
-            {activeTab === 'regenerate' && <VideoDropzone onRegenerated={url => applyOutput('regenerate', url)} />}
-            {activeTab === 'lipsync'    && (
-              <LipSyncPanel
-                currentVideoId={selectedVideo?.id ?? null}
-                currentAudioId={null}
-                onSyncComplete={url => applyOutput('lip-sync', url)}
-              />
-            )}
-            {activeTab === 'dub'        && (
-              <AutoDubPanel
-                videoId={selectedVideo?.id ?? null}
-                onDubComplete={url => applyOutput('auto-dub', url)}
-              />
-            )}
+            {activeTab === 'titles'     && <TitlesPanel videoId={selectedVideo?.id ?? null} videoDuration={selectedVideo?.duration ?? 0} onApplied={(url) => registerProcessedVideo(url, 'Titled video')} />}
+            {activeTab === 'vfx'        && <VFXPanel videoId={selectedVideo?.id ?? null} onApplied={(url) => registerProcessedVideo(url, 'VFX video')} />}
+            {activeTab === 'analytics'  && <AnalyticsDashboard />}
+            {activeTab === 'dub'        && <AutoDubPanel videoId={selectedVideo?.id ?? null} onDubComplete={(url) => registerProcessedVideo(url, 'Auto-dubbed video')} />}
             {activeTab === 'voice'      && <VoiceLab />}
-            {activeTab === 'captions' && <CaptionEditor />}
-            {activeTab === 'bgremove'  && <BackgroundRemovalPanel />}
-            {activeTab === 'watermark' && (
-              <WatermarkPanel
-                videoId={selectedVideo?.id ?? null}
-                onWatermarkApplied={(url) => applyOutput('watermark', url)}
-              />
-            )}
-            {activeTab === 'music' && (
-              <MusicPanel
-                videoId={selectedVideo?.id ?? null}
-                onMusicApplied={(url) => applyOutput('music', url)}
-              />
-            )}
-            {activeTab === 'export'    && <ExportPanel />}
+            {activeTab === 'captions'   && <CaptionEditor />}
+            {activeTab === 'bgremove'   && <BackgroundRemovalPanel />}
+            {activeTab === 'watermark'  && <WatermarkPanel videoId={selectedVideo?.id ?? null} onWatermarkApplied={(url) => registerProcessedVideo(url, 'Watermarked video')} />}
+            {activeTab === 'music'      && <MusicPanel videoId={selectedVideo?.id ?? null} onMusicApplied={(url) => registerProcessedVideo(url, 'Music mix')} />}
+            {activeTab === 'export'     && <ExportPanel />}
+            </>}
           </div>
 
           {/* Active template badge */}
@@ -241,53 +187,6 @@ function VideoStudioInner() {
           <VideoEditPanel />
         </div>
       </div>
-    </div>
-  );
-}
-
-// Simple Export Panel
-function ExportPanel() {
-  const { exportVideo, isExporting, selectedVideo } = useVideoStudio();
-
-  const formats = ['mp4', 'webm', 'mov'] as const;
-  const qualities = ['720p', '1080p', '4k'] as const;
-  const [format, setFormat] = React.useState<typeof formats[number]>('mp4');
-  const [quality, setQuality] = React.useState<typeof qualities[number]>('1080p');
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <h4 style={{ margin: 0, fontSize: '13px', fontWeight: 600, color: 'var(--vs-text-secondary)', textTransform: 'uppercase' }}>Export Settings</h4>
-
-      <div>
-        <label style={{ fontSize: '12px', color: 'var(--vs-text-muted)', display: 'block', marginBottom: '6px' }}>Format</label>
-        <div style={{ display: 'flex', gap: '6px' }}>
-          {formats.map(f => (
-            <button key={f} onClick={() => setFormat(f)}
-              style={{ padding: '6px 14px', fontSize: '13px', border: '1px solid var(--vs-border)', borderRadius: '6px', cursor: 'pointer', background: format === f ? 'var(--vs-primary)' : 'var(--vs-bg-elevated)', color: format === f ? '#fff' : 'var(--vs-text-secondary)' }}>
-              {f.toUpperCase()}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <label style={{ fontSize: '12px', color: 'var(--vs-text-muted)', display: 'block', marginBottom: '6px' }}>Quality</label>
-        <div style={{ display: 'flex', gap: '6px' }}>
-          {qualities.map(q => (
-            <button key={q} onClick={() => setQuality(q)}
-              style={{ padding: '6px 14px', fontSize: '13px', border: '1px solid var(--vs-border)', borderRadius: '6px', cursor: 'pointer', background: quality === q ? 'var(--vs-primary)' : 'var(--vs-bg-elevated)', color: quality === q ? '#fff' : 'var(--vs-text-secondary)' }}>
-              {q}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <button
-        onClick={() => exportVideo({ format, quality, includeSubtitles: false, burnCaptions: false })}
-        disabled={!selectedVideo || isExporting}
-        style={{ width: '100%', padding: '12px', background: 'var(--vs-success)', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: !selectedVideo ? 'not-allowed' : 'pointer', opacity: !selectedVideo ? 0.5 : 1 }}>
-        {isExporting ? '⏳ Exporting...' : '⬇ Export Video'}
-      </button>
     </div>
   );
 }

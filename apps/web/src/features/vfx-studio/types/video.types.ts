@@ -38,6 +38,9 @@ export interface GeneratedVideo {
   height?: number | null;
   fps?: number | null;
   codec?: string | null;
+  temporary?: boolean;
+  expiresAt?: string;
+  savedAt?: string;
 }
 
 export interface VideoProject {
@@ -85,6 +88,9 @@ export interface VideoGenerationResponse {
     height: number | null;
     fps: number | null;
     codec: string | null;
+    temporary?: boolean;
+    expiresAt?: string;
+    savedAt?: string;
   };
   /** Level 2 Phase B2: retries ke baad bhi fail hui clips (agar koi hui to) */
   failedClips?: { index: number; prompt: string; error: string }[];

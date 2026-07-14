@@ -4,6 +4,7 @@
 
 import type { VideoGenerationRequest, VideoGenerationResponse } from '../types/video.types';
 import { VIDEO_STUDIO_CONFIG } from '../constants/videoStudioConfig';
+import { authenticatedFetch } from '../../../services/auth';
 
 const API_BASE = VIDEO_STUDIO_CONFIG.api.baseUrl;
 
@@ -14,7 +15,7 @@ class VideoGenerationService {
     onAccepted?: (jobId: string) => void,
     idempotencyKey?: string,
   ): Promise<VideoGenerationResponse> {
-    const response = await fetch(`${API_BASE}/api/video/generate`, {
+    const response = await authenticatedFetch(`${API_BASE}/api/video/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}) },
       body: JSON.stringify(request),
@@ -31,7 +32,7 @@ class VideoGenerationService {
   }
 
   async cancel(jobId: string): Promise<void> {
-    const response = await fetch(`${API_BASE}/api/video/jobs/${jobId}/cancel`, { method: 'POST' });
+    const response = await authenticatedFetch(`${API_BASE}/api/video/jobs/${jobId}/cancel`, { method: 'POST' });
     if (!response.ok) throw new Error('Cancellation request failed');
   }
 
@@ -44,7 +45,7 @@ class VideoGenerationService {
     let lastProgress = 0;
     for (;;) {
       await new Promise(r => setTimeout(r, 2000));
-      const res = await fetch(`${API_BASE}/api/video/jobs/${jobId}`);
+      const res = await authenticatedFetch(`${API_BASE}/api/video/jobs/${jobId}`);
       const data: VideoGenerationResponse = await res.json();
       if (typeof data.progress === 'number') lastProgress = data.progress;
       onProgress?.(lastProgress);
@@ -57,13 +58,22 @@ class VideoGenerationService {
   }
 
   async getJobStatus(jobId: string): Promise<VideoGenerationResponse> {
-    const res = await fetch(`${API_BASE}/api/video/jobs/${jobId}`);
+    const res = await authenticatedFetch(`${API_BASE}/api/video/jobs/${jobId}`);
     if (!res.ok) throw new Error('Failed to fetch job status');
     return res.json();
   }
 
   async deleteVideo(videoId: string): Promise<void> {
-    await fetch(`${API_BASE}/api/video/${videoId}`, { method: 'DELETE' });
+    await authenticatedFetch(`${API_BASE}/api/video/${videoId}`, { method: 'DELETE' });
+  }
+
+  async saveVideo(videoId: string): Promise<{ savedAt?: string }> {
+    const response = await authenticatedFetch(`${API_BASE}/api/videos/${videoId}/save`, { method: 'POST' });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({})) as { error?: string };
+      throw new Error(data.error ?? 'Video save nahi ho saka.');
+    }
+    return response.json();
   }
 }
 
